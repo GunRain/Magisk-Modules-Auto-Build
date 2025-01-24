@@ -23,7 +23,7 @@ on:
         required: true
         default: 'instpkg'
       ghp:
-        description: 'Github Proxy Url (eg https://localhost/)'
+        description: 'Github Proxy Url(Must end with "/") (eg https://localhost/)'
         required: false
 
 jobs:
