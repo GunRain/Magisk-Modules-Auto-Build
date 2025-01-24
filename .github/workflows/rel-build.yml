@@ -57,7 +57,7 @@ jobs:
         run: |
           cd workdir
           bash build.sh targetMod
-          [ "${{ github.event.inputs.zip }}" = instpkg ] || mv -f workdir/output/targetMod/instpkg.zip "workdir/output/targetMod/${{ github.event.inputs.zip }}.zip"
+          [ "${{ github.event.inputs.zip }}" = instpkg ] || mv -f output/targetMod/instpkg.zip "output/targetMod/${{ github.event.inputs.zip }}.zip"
       - name: Get Module Version
         run: |
           echo "VERSION=$(grep -m 1 '^version=' "workdir/list/targetMod/root/module.prop" | sed 's/^version=//')" >> $GITHUB_ENV
