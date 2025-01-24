@@ -54,7 +54,7 @@ make_zip() {
     7za.exe a -tzip instpkg.zip -mmt24 -mx9 -r *
     return $?
   } || {
-    command -v 7za.exe >/dev/null 2>&1 && {
+    command -v 7za >/dev/null 2>&1 && {
       7za a -tzip instpkg.zip -mmt24 -mx9 -r *
       return $?
     } || zip -r -9 instpkg.zip *
