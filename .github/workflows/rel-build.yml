@@ -15,9 +15,9 @@ on:
         required: true
         default: 'update.json'
       version:
-        description: 'Version Name Head (eg Release Version, will be Release Version <Version in "module.prop">)'
-        required: true
-        default: 'Release Version'
+        description: 'Version Name Head (eg Module, will be Module <Version in "module.prop">)'
+        required: false
+        default: 'Module'
       zip:
         description: 'Zip Name (eg instpkg)'
         required: true
