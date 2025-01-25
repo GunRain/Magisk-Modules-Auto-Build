@@ -17,8 +17,8 @@ fork本仓库然后运行action
 
 然后运行action按照需求填写参数  
 
-![alt text](img/image_2.png)
-![alt text](img/image_1.png)
+![alt text](./img/image_2.png)
+![alt text](./img/image_1.png)
 
 # 注意事项
 
