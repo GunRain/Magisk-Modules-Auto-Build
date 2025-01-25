@@ -4,7 +4,7 @@
 
 [模块示例](https://github.com/GunRain/Magisk-Module-EG)
 
-
+![](https://raw.githubusercontent.com/YumeYuka/Magisk-Modules-Auto-Build/aaa/img/image_2.png)
 # 使用方法
 
 fork模块示例，添加自己的代码  
@@ -17,7 +17,7 @@ fork本仓库然后运行action
 
 然后运行action按照需求填写参数  
 
-![alt text](./img/image_2.png)
+![alt text](./img/image_2.png)  
 ![alt text](./img/image_1.png)
 
 # 注意事项
