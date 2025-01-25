@@ -8,6 +8,7 @@ updater-script text eol=lf
 *.rc text eol=lf
 *.awk text eol=lf
 *.prop text eol=lf
+*.properties text eol=lf
 *.rule text eol=lf
 
 *.mk text eol=lf
