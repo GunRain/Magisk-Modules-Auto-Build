@@ -1,5 +1,9 @@
 workDir="$(dirname "$(readlink -f "$0")")"
 
+wsl2win() {
+  echo -n "$@" | sed 's|^/mnt/\([^/]*\)/|\1:/|'
+}
+
 run_ndk_build() {
   command -v ndk-build.cmd >/dev/null 2>&1 && {
     eval "cmd.exe /c ndk-build.cmd $@"
@@ -30,6 +34,13 @@ run_go_build() {
       } || eval "go $@"
     }
   }
+}
+
+run_upx() {
+  command -v upx.exe >/dev/null 2>&1 && {
+    eval "cmd.exe /c upx.exe --best '$(wsl2win "$1")' | cat"
+    return $?
+  } || upx --best "$1"
 }
 
 cpp_arch2arch() {
@@ -116,6 +127,11 @@ for mod in "$workDir/list"/*/; do
         run_go_build "-literals -seed=random -tiny" build -ldflags=\"-w -s\" || continue
         mv -f "$native/$binName" "$workDir/output/tmp/bin/$binName/`go_arch2arch $arch`.bin"
       done
+    done
+  }
+  [ "$USE_UPX" = true ] && {
+    for bin in $(find "$workDir/output/tmp/bin" -type f); do
+      run_upx "$bin"
     done
   }
   for file in $(find "$workDir/output/tmp" -type f -not -path "*META-INF*"); do
