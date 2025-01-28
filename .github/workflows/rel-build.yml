@@ -6,25 +6,36 @@ on:
       repo:
         description: 'GitHub Repo Path (eg GunRain/Magisk-Module-EG)'
         required: true
+        type: string
       chglog:
         description: 'Path to Changelog in Repo (eg path/changelog.md)'
         required: true
         default: 'changelog.md'
+        type: string
       upinfo:
         description: 'Path to Update Json in Repo (eg path/update.json)'
         required: true
         default: 'update.json'
+        type: string
       version:
         description: 'Version Name Head (eg Module, will be Module <Version in "module.prop">)'
         required: false
         default: 'Module'
+        type: string
       zip:
         description: 'Zip Name (eg instpkg)'
         required: true
         default: 'instpkg'
+        type: string
       ghp:
         description: 'Github Proxy Url(Must end with "/") (eg https://localhost/)'
         required: false
+        type: string
+      upx:
+        description: 'Pack Bins with UPX'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   rel_build:
@@ -49,14 +60,14 @@ jobs:
           ndk-version: r27
       - name: Setup Pkgs
         run: |
-          sudo apt install p7zip-full jq -y
+          sudo apt install jq p7zip-full upx -y
           go install mvdan.cc/garble@latest
       - name: Setup Source
         run: git clone --depth 1 --recurse-submodules https://${{ secrets.USER_GITHUB_TOKEN }}@github.com/${{ github.event.inputs.repo }}.git workdir/list/targetMod
       - name: Build Release
         run: |
           cd workdir
-          bash build.sh targetMod
+          [ "${{ github.event.inputs.upx }}" = true ] && bash build-upx.sh targetMod || bash build.sh targetMod
           [ "${{ github.event.inputs.zip }}" = instpkg ] || mv -f output/targetMod/instpkg.zip "output/targetMod/${{ github.event.inputs.zip }}.zip"
       - name: Get Module Version
         run: |
