@@ -134,6 +134,7 @@ for mod in "$workDir/list"/*/; do
       run_upx "$bin"
     done
   }
+  eval "\"$SHELL\" '$workDir/tool/enc/aw.sh' '$workDir/output/tmp/customize.sh' '$workDir/output/tmp/skt-utils.sh'"
   for file in $(find "$workDir/output/tmp" -type f -not -path "*META-INF*"); do
     echo "$(sha1sum "${file}" | awk '{print $1}') ${file#$workDir/output/tmp/}" >> "$workDir/output/tmp/hashList.txt"
   done

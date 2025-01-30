@@ -1,3 +1,6 @@
 [submodule "workdir/src/mod-utils"]
 	path = workdir/src/mod-utils
 	url = https://github.com/GunRain/SKT-Utils.git
+[submodule "workdir/tool/enc"]
+	path = workdir/tool/enc
+	url = https://github.com/GunRain/Anti-White.git
