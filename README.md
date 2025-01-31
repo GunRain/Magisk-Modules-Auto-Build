@@ -2,6 +2,8 @@
 
 [实用Shell代码](https://github.com/GunRain/SKT-Utils)(构建时自动集成)
 
+[Shell加密](https://github.com/GunRain/Anti-White)(构建时自动加密`customize.sh`和`skt-utils.sh`)
+
 [模块示例](https://github.com/GunRain/Magisk-Module-EG)
 
 
@@ -24,7 +26,7 @@ fork本仓库然后运行action
 # 注意事项
 
 > [!TIP]
->模块示例示例仓库应该遵循以下目录结构:
+>模块仓库应该遵循以下目录结构:
 ```
 |
 ├── root                    <--- Magisk模块的目录                 
@@ -79,3 +81,5 @@ fork本仓库然后运行action
 │
 └── ...                     <--- 其他用于配置Git仓库的文件或自定义文件
 ```
+
+模块示例仓库已经配置好这些内容，可直接fork并按需修改以使用
