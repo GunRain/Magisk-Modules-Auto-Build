@@ -77,7 +77,7 @@ for mod in "$workDir/list"/*/; do
   [ -d "$mod" ] || continue
   [ -d "$mod/root" ] || continue
   [ -f "$mod/root/module.prop" ] || continue
-  [ -z "$@" ] || {
+  [ -z "$*" ] || {
     isTarget=false
     for target in $@; do
       [ $target = `basename "$mod"` ] && isTarget=true
