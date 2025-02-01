@@ -96,7 +96,7 @@ for mod in "$workDir/list"/*/; do
       [ -z "$type" ] && continue
       cd "$native/jni"
       run_ndk_build -j`nproc`
-      run_ndk_build -j`nproc` || continue
+      run_ndk_build || continue
       binName=`basename "$native"`
       [ $type = lib ] && {
         binName="lib$binName.so"
