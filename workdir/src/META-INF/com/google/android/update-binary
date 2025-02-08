@@ -6,7 +6,7 @@ umask 000
 OUTFD="$2"
 ZIPFILE="$3"
 mount /data
-[ ! -f '/data/adb/magisk/util_functions.sh' ] && { false ; exit ; } || source '/data/adb/magisk/util_functions.sh'
+[ -f '/data/adb/magisk/util_functions.sh' ] && . '/data/adb/magisk/util_functions.sh' || exit
 install_module
 true
 exit
