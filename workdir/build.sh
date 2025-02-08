@@ -85,7 +85,7 @@ for mod in "$workDir/list"/*/; do
     $isTarget || continue
   }
   cp -rf "$mod/root" "$workDir/output/tmp" || continue
-  cp -rf "$workDir/src/META-INF" "$workDir/output/tmp/META-INF" || continue
+  [ ! -f "$mod/.nometa" ] && { cp -rf "$workDir/src/META-INF" "$workDir/output/tmp/META-INF" || continue; }
   cp -f "$workDir/src/mod-utils/skt-utils.sh" "$workDir/output/tmp/skt-utils.sh" || continue
   [ -d "$mod/c++_native" ] && {
     for native in "$mod/c++_native"/*/; do
