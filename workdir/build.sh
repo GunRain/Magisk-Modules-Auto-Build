@@ -86,7 +86,7 @@ for mod in "$workDir/list"/*/; do
   }
   cp -rf "$mod/root" "$workDir/output/tmp" || continue
   [ ! -f "$mod/.nometa" ] && { cp -rf "$workDir/src/META-INF" "$workDir/output/tmp/META-INF" || continue; }
-  cp -f "$workDir/src/mod-utils/skt-utils.sh" "$workDir/output/tmp/skt-utils.sh" || continue
+  cp -f "$workDir/src/nga-sdk/src/shell/nga-utils.sh" "$workDir/output/tmp/nga-utils.sh" || continue
   [ -d "$mod/c++_native" ] && {
     for native in "$mod/c++_native"/*/; do
       [ -d "$native" ] || continue
@@ -134,7 +134,7 @@ for mod in "$workDir/list"/*/; do
       run_upx "$bin"
     done
   }
-  eval "\"$SHELL\" '$workDir/tool/enc/aw.sh' '$workDir/output/tmp/customize.sh' '$workDir/output/tmp/skt-utils.sh'"
+  eval "\"$SHELL\" '$workDir/src/nga-sdk/src/shell/nga-enc.sh' '$workDir/output/tmp/customize.sh' '$workDir/output/tmp/nga-utils.sh'"
   for file in $(find "$workDir/output/tmp" -type f -not -path "*META-INF*"); do
     echo "$(sha1sum "${file}" | awk '{print $1}') ${file#$workDir/output/tmp/}" >> "$workDir/output/tmp/hashList.txt"
   done
