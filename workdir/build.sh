@@ -149,4 +149,5 @@ for mod in "$workDir/list"/*/; do
   mkdir -p "$workDir/output/`basename "$mod"`"
   mv -f "$workDir/output/tmp/instpkg.zip" "$workDir/output/`basename "$mod"`/instpkg.zip"
   rm -rf "$workDir/output/tmp"
+  cd "$workDir"
 done
