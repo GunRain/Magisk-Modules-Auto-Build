@@ -1,8 +1,6 @@
 # Magisk Modules Auto Build
 
-[实用Shell代码](https://github.com/GunRain/SKT-Utils)(构建时自动集成)
-
-[Shell加密](https://github.com/GunRain/Anti-White)(构建时自动加密`customize.sh`和`skt-utils.sh`)
+[NGA SDK](https://github.com/GunRain/NGA-SDK)(构建时自动集成Shell Utils，自动加密`customize.sh`和`nga-utils.sh`)
 
 [模块示例](https://github.com/GunRain/Magisk-Module-EG)
 
@@ -49,7 +47,7 @@ fork本仓库然后运行action
 │   │
 │   │      *** 构建时文件 (在构建时会自动添加的文件，不应在您的存储库内出现这些文件) ***
 │   │
-│   ├── skt-utils.sh        <--- 此文件将会在构建时自动添加，内含各种常用Shell函数
+│   ├── nga-utils.sh        <--- 此文件将会在构建时自动添加，内含各种常用Shell函数
 │   ├── hashList.dat        <--- 此文件将会在构建时自动添加，内含模块文件的哈希值，用于安装时校验
 │   ├── META-INF            <--- 此目录将会在构建时自动添加，内含模块Recovery刷入脚本 (Magisk模块必须包含这些文件，如果仅支持KernelSU/APatch则无需包含)
 │   ├── zygisk              <--- 如果在“c++_native”目录有共享库项目，则会自动添加进此目录，用于Zygisk相关功能 (此目录也可自己添加)
