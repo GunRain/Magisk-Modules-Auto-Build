@@ -88,7 +88,7 @@ jobs:
           upinfo="${{ github.event.inputs.upinfo }}"
           jq '.versionCode = ${{ env.VERSION_CODE }} | .version = "${{ env.VERSION }}" | .zipUrl = "${{ github.event.inputs.ghp }}https://github.com/${{ github.event.inputs.repo }}/releases/download/${{ env.VERSION_CODE }}/${{ github.event.inputs.zip }}.zip"' ${{ github.event.inputs.upinfo }} > tmp.json && mv -f tmp.json ${{ github.event.inputs.upinfo }}
           git add "$upinfo"
-          git commit -m "Auto Update" --allow-empty
+          git commit -m "Auto Update for ${{ github.event.inputs.version }} ${{ env.VERSION }}" --allow-empty
           git push origin HEAD
         env:
           GITHUB_TOKEN: ${{ secrets.USER_GITHUB_TOKEN }}
