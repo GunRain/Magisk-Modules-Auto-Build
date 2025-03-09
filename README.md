@@ -1,8 +1,8 @@
 # Magisk Modules Auto Build
 
-[NGA SDK](https://github.com/GunRain/NGA-SDK)(构建时自动集成Shell Utils，自动加密`customize.sh`和`nga-utils.sh`)
+[NGA SDK](https://gitcode.com/OutOfMemories-WorkGroup/NGA-SDK)(构建时自动集成Shell Utils，自动加密`customize.sh`和`nga-utils.sh`)
 
-[模块示例](https://github.com/GunRain/Magisk-Module-EG)
+[模块示例](https://gitcode.com/OutOfMemories-WorkGroup/Magisk-Module-EG)
 
 
 # 使用方法
