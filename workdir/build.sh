@@ -135,6 +135,7 @@ for mod in "$workDir/list"/*/; do
     done
   }
   eval "\"$SHELL\" '$workDir/src/nga-sdk/src/shell/nga-enc.sh' '$workDir/output/tmp/customize.sh' '$workDir/output/tmp/nga-utils.sh'"
+  cat "$workDir/output/tmp/module.prop" | grep -q 咲汀 && cp -f "$workDir/../LICENSE.txt" "$workDir/output/tmp/LICENSE.txt"
   for file in $(find "$workDir/output/tmp" -type f -not -path "*META-INF*"); do
     echo "$(sha1sum "${file}" | awk '{print $1}') ${file#$workDir/output/tmp/}" >> "$workDir/output/tmp/hashList.txt"
   done
