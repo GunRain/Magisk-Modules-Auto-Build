@@ -5,7 +5,7 @@
 [模块示例](https://gitcode.com/OutOfMemories-WorkGroup/Magisk-Module-EG)
 
 
-# 使用方法
+# 使用方法(仅适用于GitHub，非GitHub只能本地构建然后手动发布)
 
 fork模块示例，添加自己的代码
 
@@ -31,19 +31,21 @@ fork本仓库然后运行action
 │   │
 │   │      *** 模块配置文件 ***
 │   │
-│   ├── module.prop         <--- 此文件保存模块相关的一些配置，如模块 ID、版本等
-│   ├── customize.sh        <--- 此文件控制刷入模块时的安装选项
+│   ├── module.prop         <--- 此文件用于保存模块相关的一些配置，如模块 ID、版本等
 │   │
 │   │      *** 可选文件 ***
 │   │
-│   ├── action.sh           <--- 这个脚本可在root管理器内通过按钮提供给用户执行
-│   ├── post-fs-data.sh     <--- 这个脚本将会在 post-fs-data 模式下运行
-│   ├── post-mount.sh       <--- 这个脚本将会在 post-mount 模式下运行 (仅受KernelSU/APatch支持)
-│   ├── service.sh          <--- 这个脚本将会在 late_start 服务模式下运行
-│   ├── boot-completed.sh   <--- 这个脚本将会在 Android 系统启动完毕后以服务模式运行 (仅受KernelSU/APatch支持，Magisk可在“service.sh”内主动执行)
-|   ├── uninstall.sh        <--- 这个脚本将会在模块被卸载时运行
-│   ├── system.prop         <--- 这个文件中指定的属性将会在系统启动时通过 resetprop 更改
-│   ├── sepolicy.rule       <--- 这个文件中的 SELinux 策略将会在系统启动时加载
+│   ├── customize.sh        <--- 此脚本用于控制安装模块时的行为
+│   ├── action.sh           <--- 此脚本可在root管理器内通过按钮提供给用户执行
+│   │                              (Magisk 27008+/KernelSU 1.0.2+/APatch 11039+，低版本不支持该按钮，开发者应避免不支持而是建议使用者脱离啃老
+│   │                              或者建议使用者从KernelSU转向KernelSU Next等分支以获取更好的体验(KSU官方版非GKI百分百用不了啦！))
+│   ├── post-fs-data.sh     <--- 此脚本将会在 post-fs-data 模式下运行
+│   ├── post-mount.sh       <--- 此脚本将会在 post-mount 模式下运行 (仅受KernelSU/APatch支持)
+│   ├── service.sh          <--- 此脚本将会在 late_start 服务模式下运行
+│   ├── boot-completed.sh   <--- 此脚本将会在 Android 系统启动完毕后以服务模式运行 (仅受KernelSU/APatch支持，Magisk可在“service.sh”内主动执行)
+|   ├── uninstall.sh        <--- 此脚本将会在模块被卸载时运行
+│   ├── system.prop         <--- 此文件中指定的属性将会在系统启动时通过 resetprop 更改
+│   ├── sepolicy.rule       <--- 此文件中的 SELinux 策略将会在系统启动时加载
 │   │
 │   │      *** 构建时文件 (在构建时会自动添加的文件，不应在您的存储库内出现这些文件) ***
 │   │
@@ -67,7 +69,7 @@ fork本仓库然后运行action
 │ 
 ├── go_native               <--- Go源码的目录
 │   ├── <项目名称>          <--- 项目名称 (必须和“module”值的最后名称相同，即生成后的二进制名称)
-│   │   ├── arch.txt        <--- 架构配置文件 (以空格分割架构)
+│   │   ├── arch.txt        <--- 架构配置文件 (以空格分割架构，架构以Go支持的为准(例如使用“amd64”而非“x86_64”))
 │   │   ├── go.mod          <--- 项目信息文件
 │   │   ├── go.sum          <--- 有依赖时生成的校验文件
 │   │   └── ...             <--- 其他源码文件
@@ -76,6 +78,8 @@ fork本仓库然后运行action
 ├── README.md               <--- 仓库说明文件
 ├── changelog.md            <--- 模块更新日志 (可自定义名称/路径)
 ├── update.json             <--- 用于更新模块的 JSON 文件 (可自定义名称/路径)
+│
+├── .nometa                 <--- 可选文件，此文件存在时将会不自动复制“META-INF”到模块目录
 │
 └── ...                     <--- 其他用于配置Git仓库的文件或自定义文件
 ```
