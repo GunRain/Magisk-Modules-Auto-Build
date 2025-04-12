@@ -4,13 +4,11 @@
 
 [模块示例](https://gitcode.com/OutOfMemories-WorkGroup/Magisk-Module-EG)
 
-
 # 使用方法(仅适用于GitHub，非GitHub只能本地构建然后手动发布)
 
 fork模块示例，添加自己的代码
 
 fork本仓库然后运行action
-
 
 在下方按钮创建token，添加进fork后的本仓库的密钥，密钥名称为`USER_GITHUB_TOKEN`
 
@@ -25,7 +23,8 @@ fork本仓库然后运行action
 
 > [!TIP]
 >模块仓库应该遵循以下目录结构:
-```
+
+``` plaintext
 |
 ├── root                    <--- Magisk模块的目录                 
 │   │
