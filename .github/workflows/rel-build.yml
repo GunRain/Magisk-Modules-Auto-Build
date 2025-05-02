@@ -53,38 +53,38 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
+          go-version: '1.24'
       - name: Setup Android NDK
         uses: nttld/setup-ndk@v1
         with:
           ndk-version: r28
       - name: Setup Pkgs
         run: |
-          sudo apt install jq p7zip-full upx -y
+          sudo apt install jq upx -y
           go install mvdan.cc/garble@latest
       - name: Setup Source
-        run: git clone --depth 1 --recurse-submodules https://${{ secrets.USER_GITHUB_TOKEN }}@github.com/${{ github.event.inputs.repo }}.git workdir/list/targetMod
+        run: git clone --depth 1 --recurse-submodules https://${{ secrets.USER_GITHUB_TOKEN }}@github.com/${{ github.event.inputs.repo }}.git workdir/input/target
       - name: Build Release
         run: |
           cd workdir
-          [ "${{ github.event.inputs.upx }}" = true ] && bash build-upx.sh targetMod || bash build.sh targetMod
-          [ "${{ github.event.inputs.zip }}" = instpkg ] || mv -f output/targetMod/instpkg.zip "output/targetMod/${{ github.event.inputs.zip }}.zip"
+          [ "${{ github.event.inputs.upx }}" = true ] && bash build.sh -names target -upx -outname "${{ github.event.inputs.zip }}" || \
+            bash build.sh -names target -outname "${{ github.event.inputs.zip }}"
       - name: Get Module Version
         run: |
-          echo "VERSION=$(grep -m 1 '^version=' "workdir/list/targetMod/root/module.prop" | sed 's/^version=//')" >> $GITHUB_ENV
-          echo "VERSION_CODE=$(grep -m 1 '^versionCode=' "workdir/list/targetMod/root/module.prop" | sed 's/^versionCode=//')" >> $GITHUB_ENV
+          echo "VERSION=$(grep -m 1 '^version=' "workdir/input/target/root/module.prop" | sed 's/^version=//')" >> $GITHUB_ENV
+          echo "VERSION_CODE=$(grep -m 1 '^versionCode=' "workdir/input/target/root/module.prop" | sed 's/^versionCode=//')" >> $GITHUB_ENV
       - name: Upload Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.VERSION_CODE }}
-          body_path: workdir/list/targetMod/${{ github.event.inputs.chglog }}
+          body_path: workdir/input/target/${{ github.event.inputs.chglog }}
           name: ${{ github.event.inputs.version }} ${{ env.VERSION }}
-          files: workdir/output/targetMod/${{ github.event.inputs.zip }}.zip
+          files: workdir/output/target/${{ github.event.inputs.zip }}.zip
           repository: ${{ github.event.inputs.repo }}
           token: ${{ secrets.USER_GITHUB_TOKEN }}
       - name: Upload Update Json
         run: |
-          cd workdir/list/targetMod
+          cd workdir/input/target
           upinfo="${{ github.event.inputs.upinfo }}"
           jq '.versionCode = ${{ env.VERSION_CODE }} | .version = "${{ env.VERSION }}" | .zipUrl = "${{ github.event.inputs.ghp }}https://github.com/${{ github.event.inputs.repo }}/releases/download/${{ env.VERSION_CODE }}/${{ github.event.inputs.zip }}.zip"' ${{ github.event.inputs.upinfo }} > tmp.json && mv -f tmp.json ${{ github.event.inputs.upinfo }}
           git add "$upinfo"
