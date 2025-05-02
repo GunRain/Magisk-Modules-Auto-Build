@@ -1,2 +1,2 @@
 @echo off
-wsl bash build.sh %*
+go run . %*
