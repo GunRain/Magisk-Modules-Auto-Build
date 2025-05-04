@@ -275,14 +275,14 @@ func main() {
 					}
 					for _, entry := range entries {
 						target_arch := entry.Name()
-						target_exe_dir := filepath.Join(tmp_dir, "bin", cpp_arch2arch(target_arch))
+						target_exe_dir := filepath.Join(tmp_dir, "bin", bin_name)
 						if target_bin := filepath.Join(lib_dir, target_arch, bin_name); nga.PathExist(target_bin) {
 							err = os.MkdirAll(target_exe_dir, os.ModePerm)
 							if err != nil {
 								fmt.Printf("[!] Error: \tcannot create dir \"%s\"\n", target_exe_dir)
 								return
 							}
-							if ok, _ := nga.MvFile(target_bin, filepath.Join(target_exe_dir, bin_name)); ok {
+							if ok, _ := nga.MvFile(target_bin, filepath.Join(target_exe_dir, cpp_arch2arch(target_arch)+".elf")); ok {
 								fmt.Printf("[→] Moved: \tC++ Executable \"%s\" (Arch: %s)\n", bin_name, target_arch)
 							} else {
 								fmt.Printf("[!] Error: \tcannot move c++ executable \"%s\" (arch: %s)\n", bin_name, target_arch)
@@ -353,14 +353,14 @@ func main() {
 						fmt.Printf("[!] Error: \tcannot build go executable \"%s\" (arch: %s)\n", bin_name, target_arch)
 						return
 					}
-					target_exe_dir := filepath.Join(tmp_dir, "bin", go_arch2arch(target_arch))
+					target_exe_dir := filepath.Join(tmp_dir, "bin", bin_name)
 					if target_bin := filepath.Join(bin_dir, bin_name); nga.PathExist(target_bin) {
 						err = os.MkdirAll(target_exe_dir, os.ModePerm)
 						if err != nil {
 							fmt.Printf("[!] Error: \tcannot create dir \"%s\"\n", target_exe_dir)
 							return
 						}
-						if ok, _ := nga.MvFile(target_bin, filepath.Join(target_exe_dir, bin_name)); ok {
+						if ok, _ := nga.MvFile(target_bin, filepath.Join(target_exe_dir, go_arch2arch(target_arch)+".elf")); ok {
 							fmt.Printf("[→] Moved: \tGo Executable \"%s\" (Arch: %s)\n", bin_name, target_arch)
 						} else {
 							fmt.Printf("[!] Error: \tcannot move go executable \"%s\" (arch: %s)\n", bin_name, target_arch)
