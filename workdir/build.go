@@ -19,6 +19,7 @@ import (
 	"compress/flate"
 	"compress/gzip"
 	"crypto/sha1"
+	"crypto/sha512"
 	"encoding/base64"
 	"encoding/hex"
 	"flag"
@@ -507,7 +508,7 @@ func main() {
 				return err
 			}
 			defer file.Close()
-			hash1 := sha1.New()
+			hash1 := sha512.New384()
 			if _, err := io.Copy(hash1, file); err != nil {
 				return err
 			}
