@@ -250,17 +250,16 @@ func main() {
 						fmt.Printf("[!] Error: \tcannot read dir \"%s\"\n", lib_dir)
 						return
 					}
+					err = os.MkdirAll(zygisk_dir, os.ModePerm)
+					if err != nil {
+						fmt.Printf("[!] Error: \tcannot create dir \"%s\"\n", zygisk_dir)
+						return
+					}
 					for _, entry := range entries {
 						target_arch := entry.Name()
 						target_bin_name := "lib" + bin_name + ".so"
-						target_zygisk_dir := filepath.Join(zygisk_dir, target_arch)
 						if target_bin := filepath.Join(lib_dir, target_arch, target_bin_name); nga.PathExist(target_bin) {
-							err = os.MkdirAll(target_zygisk_dir, os.ModePerm)
-							if err != nil {
-								fmt.Printf("[!] Error: \tcannot create dir \"%s\"\n", target_zygisk_dir)
-								return
-							}
-							if ok, _ := nga.MvFile(target_bin, filepath.Join(target_zygisk_dir, target_bin_name)); ok {
+							if ok, _ := nga.MvFile(target_bin, filepath.Join(zygisk_dir, target_arch+".so")); ok {
 								fmt.Printf("[→] Moved: \tC++ Zygisk Library \"%s\" (Arch: %s)\n", bin_name, target_arch)
 							} else {
 								fmt.Printf("[!] Error: \tcannot move c++ zygisk library \"%s\" (arch: %s)\n", bin_name, target_arch)
