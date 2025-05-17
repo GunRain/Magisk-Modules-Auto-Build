@@ -259,11 +259,11 @@ func main() {
 						target_arch := entry.Name()
 						target_bin_name := "lib" + bin_name + ".so"
 						if target_bin := filepath.Join(lib_dir, target_arch, target_bin_name); nga.PathExist(target_bin) {
-							if ok, _ := nga.MvFile(target_bin, filepath.Join(zygisk_dir, target_arch+".so")); ok {
-								fmt.Printf("[→] Moved: \tC++ Zygisk Library \"%s\" (Arch: %s)\n", bin_name, target_arch)
-							} else {
+							if err = nga.MoveFile(target_bin, filepath.Join(zygisk_dir, target_arch+".so")); err != nil {
 								fmt.Printf("[!] Error: \tcannot move c++ zygisk library \"%s\" (arch: %s)\n", bin_name, target_arch)
 								return
+							} else {
+								fmt.Printf("[→] Moved: \tC++ Zygisk Library \"%s\" (Arch: %s)\n", bin_name, target_arch)
 							}
 						}
 					}
@@ -282,11 +282,11 @@ func main() {
 								fmt.Printf("[!] Error: \tcannot create dir \"%s\"\n", target_exe_dir)
 								return
 							}
-							if ok, _ := nga.MvFile(target_bin, filepath.Join(target_exe_dir, cpp_arch2arch(target_arch)+".elf")); ok {
-								fmt.Printf("[→] Moved: \tC++ Executable \"%s\" (Arch: %s)\n", bin_name, target_arch)
-							} else {
+							if err = nga.MoveFile(target_bin, filepath.Join(target_exe_dir, cpp_arch2arch(target_arch)+".elf")); err != nil {
 								fmt.Printf("[!] Error: \tcannot move c++ executable \"%s\" (arch: %s)\n", bin_name, target_arch)
 								return
+							} else {
+								fmt.Printf("[→] Moved: \tC++ Executable \"%s\" (Arch: %s)\n", bin_name, target_arch)
 							}
 						}
 					}
@@ -360,11 +360,11 @@ func main() {
 							fmt.Printf("[!] Error: \tcannot create dir \"%s\"\n", target_exe_dir)
 							return
 						}
-						if ok, _ := nga.MvFile(target_bin, filepath.Join(target_exe_dir, go_arch2arch(target_arch)+".elf")); ok {
-							fmt.Printf("[→] Moved: \tGo Executable \"%s\" (Arch: %s)\n", bin_name, target_arch)
-						} else {
+						if err = nga.MoveFile(target_bin, filepath.Join(target_exe_dir, go_arch2arch(target_arch)+".elf")); err != nil {
 							fmt.Printf("[!] Error: \tcannot move go executable \"%s\" (arch: %s)\n", bin_name, target_arch)
 							return
+						} else {
+							fmt.Printf("[→] Moved: \tGo Executable \"%s\" (Arch: %s)\n", bin_name, target_arch)
 						}
 					}
 				}
