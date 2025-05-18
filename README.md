@@ -6,11 +6,11 @@
 
 # 使用方法(仅适用于GitHub，非GitHub只能本地构建然后手动发布)
 
-fork模块示例，添加自己的代码
+复制模块示例为自己的仓库，添加自己的代码
 
-fork本仓库然后运行action
+复制本仓库为自己的仓库，然后运行action (**请尽量不要fork！**)
 
-在下方按钮创建token，添加进fork后的本仓库的密钥，密钥名称为`USER_GITHUB_TOKEN`
+在下方按钮创建token，添加进复制后的本仓库的密钥，密钥名称为`USER_GITHUB_TOKEN`
 
 [![](./img/gh.svg)](https://github.com/settings/tokens)
 

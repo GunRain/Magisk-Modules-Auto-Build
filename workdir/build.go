@@ -35,6 +35,7 @@ import (
 	"time"
 
 	"app.niggergo.work/sdk/nga"
+	"github.com/ulikunitz/xz"
 )
 
 type strs []string
@@ -110,9 +111,10 @@ func main() {
 	out := flag.String("out", filepath.Join(wd, "output"), "output dir")
 	var names strs
 	flag.Var(&names, "names", "module names")
-	out_name := flag.String("outname", "instpkg.zip", "output name")
+	out_name := flag.String("outname", "instpkg", "output name")
 	garble := flag.Bool("garble", true, "use garble")
 	upx := flag.Bool("upx", false, "use upx")
+	xz_zip := flag.Bool("xz", false, "use xz")
 
 	flag.Parse()
 
@@ -549,18 +551,6 @@ func main() {
 			fmt.Printf("[✓] Wrote: \tModule \"%s\" File Hashes\n", mod)
 		}
 
-		if err = filepath.Walk(tmp_dir, func(path string, _ os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-			return os.Chtimes(path, time0, time0)
-		}); err != nil {
-			fmt.Println("[!] Error: \tcannot set file time")
-			return
-		} else {
-			fmt.Printf("[✓] Set: \tModule \"%s\" File Time 0000-01-01 00:00:00\n", mod)
-		}
-
 		out_dir := filepath.Join(*out, mod)
 		if err = os.MkdirAll(out_dir, os.ModePerm); err != nil {
 			fmt.Printf("[!] Error: \tcannot create module \"%s\" output dir\n", mod)
@@ -568,7 +558,8 @@ func main() {
 		} else {
 			fmt.Printf("[+] Created: \tModule \"%s\" Output Dir\n", mod)
 		}
-		out_path := filepath.Join(out_dir, *out_name)
+		zip_name := *out_name + ".zip"
+		out_path := filepath.Join(out_dir, zip_name)
 		zip_file, err := os.Create(out_path)
 		if err != nil {
 			fmt.Printf("[!] Error: \tcannot create module \"%s\" output zip\n", mod)
@@ -607,6 +598,7 @@ func main() {
 			}
 			header.Name = rel_path
 			header.Method = zip.Deflate
+			header.Modified = time0
 			writer, err := zip_writer.CreateHeader(header)
 			if err != nil {
 				return err
@@ -614,10 +606,67 @@ func main() {
 			_, err = io.Copy(writer, file)
 			return err
 		}); err != nil {
-			fmt.Printf("[!] Error: \tcannot create module \"%s\" output zip \"%s\"\n", mod, *out_name)
+			fmt.Printf("[!] Error: \tcannot create module \"%s\" output zip \"%s\"\n", mod, zip_name)
 			return
 		} else {
-			fmt.Printf("[+] Created: \tModule \"%s\" Output Zip \"%s\"\n", mod, *out_name)
+			fmt.Printf("[+] Created: \tModule \"%s\" Output Zip \"%s\"\n", mod, zip_name)
+		}
+		if *xz_zip {
+			zip_name := *out_name + "_xz.zip"
+			out_path := filepath.Join(out_dir, zip_name)
+			zip_file, err := os.Create(out_path)
+			if err != nil {
+				fmt.Printf("[!] Error: \tcannot create module \"%s\" output zip (xz)\n", mod)
+				return
+			}
+			defer zip_file.Close()
+			zip_writer := zip.NewWriter(zip_file)
+			zip_writer.RegisterCompressor(95, func(w io.Writer) (io.WriteCloser, error) {
+				return xz.WriterConfig{
+					DictCap: 1 << 26,
+				}.NewWriter(w)
+			})
+			defer zip_writer.Close()
+			if err = filepath.WalkDir(tmp_dir, func(path string, dir os.DirEntry, err error) error {
+				if err != nil {
+					return err
+				}
+				if dir.IsDir() {
+					return nil
+				}
+				rel_path, err := filepath.Rel(tmp_dir, path)
+				if err != nil {
+					return err
+				}
+				rel_path = filepath.ToSlash(rel_path)
+				file, err := os.Open(path)
+				if err != nil {
+					return err
+				}
+				defer file.Close()
+				info, err := dir.Info()
+				if err != nil {
+					return err
+				}
+				header, err := zip.FileInfoHeader(info)
+				if err != nil {
+					return err
+				}
+				header.Name = rel_path
+				header.Method = 95
+				header.Modified = time0
+				writer, err := zip_writer.CreateHeader(header)
+				if err != nil {
+					return err
+				}
+				_, err = io.Copy(writer, file)
+				return err
+			}); err != nil {
+				fmt.Printf("[!] Error: \tcannot create module \"%s\" output zip \"%s\" (xz)\n", mod, zip_name)
+				return
+			} else {
+				fmt.Printf("[+] Created: \tModule \"%s\" Output Zip \"%s\" (xz)\n", mod, zip_name)
+			}
 		}
 		if err = os.RemoveAll(tmp_dir); err != nil {
 			fmt.Printf("[!] Error: \tcannot clean module \"%s\" build cache\n", mod)

@@ -67,6 +67,7 @@ jobs:
       - name: Build Release
         run: |
           cd workdir
+          go get
           [ "${{ github.event.inputs.upx }}" = true ] && bash build.sh -names target -upx -outname "${{ github.event.inputs.zip }}" || \
             bash build.sh -names target -outname "${{ github.event.inputs.zip }}"
       - name: Get Module Version
