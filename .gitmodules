@@ -1,6 +1,6 @@
 [submodule "workdir/src/nga-sdk"]
 	path = workdir/src/nga-sdk
-	url = https://gitcode.com/OutOfMemories-WorkGroup/NGA-SDK.git
+	url = https://github.com/TianwanTW/NGA-SDK.git
 [submodule "workdir/src/fvv"]
 	path = workdir/src/fvv
-	url = https://gitcode.com/OutOfMemories-WorkGroup/FVV.git
+	url = https://github.com/OOM-WG/FVV.git
