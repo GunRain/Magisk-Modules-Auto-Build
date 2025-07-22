@@ -130,15 +130,15 @@ func main() {
 		}
 	}
 	var shell string
-	if _, err = exec.LookPath("bash"); err != nil {
-		if _, err = exec.LookPath("sh"); err != nil {
+	if path, err := exec.LookPath("bash"); err == nil {
+		shell = path
+	} else {
+		if path, err := exec.LookPath("sh"); err == nil {
+			shell = path
+		} else {
 			fmt.Println("[!] Error: \tcommand \"bash\" or \"sh\" not found")
 			return
-		} else {
-			shell = "sh"
 		}
-	} else {
-		shell = "bash"
 	}
 
 	if !nga.PathExist(*in) || !nga.IsDir(*in) {
