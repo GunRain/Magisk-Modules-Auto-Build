@@ -563,12 +563,10 @@ func main() {
 			fmt.Printf("[!] Error: \tcannot create module \"%s\" output zip\n", mod)
 			return
 		}
-		defer zip_file.Close()
 		zip_writer := zip.NewWriter(zip_file)
 		zip_writer.RegisterCompressor(zip.Deflate, func(w io.Writer) (io.WriteCloser, error) {
 			return flate.NewWriter(w, flate.BestCompression)
 		})
-		defer zip_writer.Close()
 		if err = filepath.WalkDir(tmp_dir, func(path string, dir os.DirEntry, err error) error {
 			if err != nil {
 				return err
@@ -609,6 +607,8 @@ func main() {
 		} else {
 			fmt.Printf("[+] Created: \tModule \"%s\" Output Zip \"%s\"\n", mod, zip_name)
 		}
+		_ = zip_writer.Close()
+		_ = zip_file.Close()
 		if err = os.RemoveAll(tmp_dir); err != nil {
 			fmt.Printf("[!] Error: \tcannot clean module \"%s\" build cache\n", mod)
 			return
