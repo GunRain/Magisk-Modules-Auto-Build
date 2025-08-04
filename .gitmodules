@@ -1,4 +1,0 @@
-[submodule "src/res/nga-sdk"]
-	path = src/res/nga-sdk
-	url = https://github.com/TianwanTW/NGA-SDK.git
-	branch = nga
