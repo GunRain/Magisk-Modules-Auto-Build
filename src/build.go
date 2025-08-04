@@ -384,14 +384,16 @@ func main() {
 			os.Exit(-1)
 		}
 
-		if nga.CopyDir(
-			filepath.Join(wd, "res", "META-INF"),
-			filepath.Join(tmp_dir, "META-INF"),
-		) != nil {
-			fmt.Println("[!] Error: \tcannot copy recovery flash script")
-			os.Exit(-1)
-		} else {
-			fmt.Printf("[=] Copied: \tRecovery Flash Script for Module \"%s\"\n", mod)
+		if nometa := filepath.Join(mod_dir, ".nometa"); !nga.PathExist(nometa) {
+			if nga.CopyDir(
+				filepath.Join(wd, "res", "META-INF"),
+				filepath.Join(tmp_dir, "META-INF"),
+			) != nil {
+				fmt.Println("[!] Error: \tcannot copy recovery flash script")
+				os.Exit(-1)
+			} else {
+				fmt.Printf("[=] Copied: \tRecovery Flash Script for Module \"%s\"\n", mod)
+			}
 		}
 
 		nga_dir := filepath.Join(wd, "res", "nga-sdk", "src", "shell")
