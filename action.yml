@@ -41,5 +41,5 @@ runs:
       run: |
         cd "${{ github.action_path }}/src"
         go run . -in "${{ inputs.input-dir }}" -id "${{ inputs.input-id }}" -out "${{ inputs.output-dir }}" -outname "${{ inputs.zip-name }}" && {
-          echo "zips=${{ inputs.outputs-dir }}" >> "$GITHUB_OUTPUT"
+          echo "zips=${{ inputs.output-dir }}" >> "$GITHUB_OUTPUT"
         }
