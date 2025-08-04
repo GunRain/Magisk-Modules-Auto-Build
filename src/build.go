@@ -111,6 +111,16 @@ func main() {
 		fmt.Println("[!] Error: \tinput dir or output dir is empty")
 		os.Exit(-1)
 	}
+	absIn, err := filepath.Abs(*in)
+	if err != nil {
+		fmt.Println("[!] Error: \tcannot get absolute input path")
+		os.Exit(-1)
+	}
+	absOut, err := filepath.Abs(*out)
+	if err != nil {
+		fmt.Println("[!] Error: \tcannot get absolute output path")
+		os.Exit(-1)
+	}
 
 	if *garble {
 		cmds = append(cmds, "garble")
@@ -134,49 +144,47 @@ func main() {
 		}
 	}
 
-	if !nga.PathExist(*in) || !nga.IsDir(*in) {
-		fmt.Printf("[!] Error: \tpath \"%s\" cannot be used\n", *in)
+	if !nga.PathExist(absIn) || !nga.IsDir(absIn) {
+		fmt.Printf("[!] Error: \tpath \"%s\" cannot be used\n", absIn)
 		os.Exit(-1)
 	}
-	if !nga.PathExist(*out) {
-		if os.MkdirAll(*out, os.ModePerm) != nil {
-			fmt.Printf("[!] Error: \tcannot create dir \"%s\"\n", *out)
-			os.Exit(-1)
-		}
-	} else if !nga.IsDir(*out) {
-		fmt.Printf("[!] Error: \tpath \"%s\" cannot be used\n", *out)
+	if !nga.PathExist(absOut) && os.MkdirAll(absOut, os.ModePerm) != nil {
+		fmt.Printf("[!] Error: \tcannot create dir \"%s\"\n", absOut)
+		os.Exit(-1)
+	} else if !nga.IsDir(absOut) {
+		fmt.Printf("[!] Error: \tpath \"%s\" cannot be used\n", absOut)
 		os.Exit(-1)
 	}
 
 	var mods []string
 	if *id == "" {
-		entries, err := os.ReadDir(*in)
+		entries, err := os.ReadDir(absIn)
 		if err != nil {
-			fmt.Printf("[!] Error: \tcannot read dir \"%s\"\n", *in)
+			fmt.Printf("[!] Error: \tcannot read dir \"%s\"\n", absIn)
 			os.Exit(-1)
 		}
 		for _, entry := range entries {
-			if nga.PathExist(filepath.Join(*in, entry.Name(), "src", "module.prop")) {
+			if nga.PathExist(filepath.Join(absIn, entry.Name(), "src", "module.prop")) {
 				mods = append(mods, entry.Name())
 				fmt.Printf("[+] Added: \tModule \"%s\" to Build List\n", entry.Name())
 			}
 		}
 	} else {
 		for id := range strings.SplitSeq(*id, "|") {
-			if nga.PathExist(filepath.Join(*in, id, "src", "module.prop")) {
+			if nga.PathExist(filepath.Join(absIn, id, "src", "module.prop")) {
 				mods = append(mods, id)
 				fmt.Printf("[+] Added: \tModule \"%s\" to Build List\n", id)
 			}
 		}
 	}
 
-	tmp_dir := filepath.Join(*out, "._mod_bld_tmp")
+	tmp_dir := filepath.Join(absOut, "._mod_bld_tmp")
 	if nga.PathExist(tmp_dir) && os.RemoveAll(tmp_dir) != nil {
 		fmt.Printf("[!] Error: \tcannot delete dir \"%s\"\n", tmp_dir)
 		os.Exit(-1)
 	}
 	for _, mod := range mods {
-		mod_dir := filepath.Join(*in, mod)
+		mod_dir := filepath.Join(absIn, mod)
 		fmt.Printf("[*] Building: \tModule \"%s\"\n", mod)
 		if os.Chdir(wd) != nil {
 			fmt.Printf("[!] Error: \tcannot change workdir to \"%s\"\n", wd)
@@ -368,7 +376,7 @@ func main() {
 		}
 
 		if nga.CopyDir(
-			filepath.Join(wd, "src", "META-INF"),
+			filepath.Join(wd, "res", "META-INF"),
 			filepath.Join(tmp_dir, "META-INF"),
 		) != nil {
 			fmt.Println("[!] Error: \tcannot copy recovery flash script")
@@ -377,7 +385,7 @@ func main() {
 			fmt.Printf("[=] Copied: \tRecovery Flash Script for Module \"%s\"\n", mod)
 		}
 
-		nga_dir := filepath.Join(wd, "src", "nga-sdk", "src", "shell")
+		nga_dir := filepath.Join(wd, "res", "nga-sdk", "src", "shell")
 		if nga.CopyFile(
 			filepath.Join(nga_dir, "nga-utils.sh"),
 			filepath.Join(tmp_dir, "nga-utils.sh"),
@@ -505,7 +513,7 @@ func main() {
 			}
 		}()
 
-		out_dir := filepath.Join(*out, mod)
+		out_dir := filepath.Join(absOut, mod)
 		if os.MkdirAll(out_dir, os.ModePerm) != nil {
 			fmt.Printf("[!] Error: \tcannot create module \"%s\" output dir\n", mod)
 			os.Exit(-1)
