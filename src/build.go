@@ -164,6 +164,9 @@ func main() {
 			os.Exit(-1)
 		}
 		for _, entry := range entries {
+			if !entry.IsDir() {
+				continue
+			}
 			if nga.PathExist(filepath.Join(absIn, entry.Name(), "src", "module.prop")) {
 				mods = append(mods, entry.Name())
 				fmt.Printf("[+] Added: \tModule \"%s\" to Build List\n", entry.Name())
@@ -201,6 +204,9 @@ func main() {
 				os.Exit(-1)
 			}
 			for _, entry := range entries {
+				if !entry.IsDir() {
+					continue
+				}
 				bin_name := entry.Name()
 				fmt.Printf("[*] Building: \tC++ Binary \"%s\"\n", bin_name)
 				jni_dir := filepath.Join(cpp_dir, bin_name, "jni")
@@ -292,6 +298,9 @@ func main() {
 				os.Exit(-1)
 			}
 			for _, entry := range entries {
+				if !entry.IsDir() {
+					continue
+				}
 				bin_name := entry.Name()
 				fmt.Printf("[*] Building: \tGo Executable \"%s\"\n", bin_name)
 				bin_dir := filepath.Join(go_dir, bin_name)
