@@ -1,6 +1,4 @@
-[submodule "workdir/src/nga-sdk"]
-	path = workdir/src/nga-sdk
+[submodule "src/res/nga-sdk"]
+	path = src/res/nga-sdk
 	url = https://github.com/TianwanTW/NGA-SDK.git
-[submodule "workdir/src/fvv"]
-	path = workdir/src/fvv
-	url = https://github.com/OOM-WG/FVV.git
+	branch = nga

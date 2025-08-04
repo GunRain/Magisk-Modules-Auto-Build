@@ -1,0 +1,45 @@
+name: 'Modules Builder'
+description: 'Build Modules with GitHub Action'
+inputs:
+  zip-name:
+    description: 'Zip Name (e.g. instpkg)'
+    default: 'instpkg'
+  input-dir:
+    description: 'Input Dir Path (e.g. input)'
+    default: ''
+  input-id:
+    description: 'Input IDs for Input Dir (split by "|", empty for all)'
+    default: ''
+  output-dir:
+    description: 'Output Dir Path (e.g. output)'
+    default: ''
+  ndk-version:
+    description: 'Android NDK Version'
+    default: 'r28'
+  go-version:
+    description: 'Go Version'
+    default: '1.24'
+outputs:
+  zips:
+    description: 'zips dir path'
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Android NDK
+      uses: nttld/setup-ndk@v1
+      with:
+        ndk-version: ${{ inputs.ndk-version }}
+    - name: Setup Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ inputs.go-version }}
+    - name: Setup Garble
+      shell: bash
+      run: go install mvdan.cc/garble@latest
+    - name: Build Modules
+      shell: bash
+      run: |
+        cd "${{ github.action_path }}/src"
+        go run . -in "${{ inputs.input-dir }}" -id "${{ inputs.input-id }}" -out "${{ inputs.output-dir }}" -outname "${{ inputs.zip-name }}" && {
+          echo "zips=${{ inputs.outputs-dir }}" >> "$GITHUB_OUTPUT"
+        }

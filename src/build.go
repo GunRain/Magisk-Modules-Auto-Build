@@ -25,7 +25,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -36,11 +35,6 @@ import (
 
 	"app.niggergo.work/sdk/nga"
 )
-
-type strs []string
-
-func (_strs *strs) Set(v string) error { *_strs = append(*_strs, v); return nil }
-func (_strs *strs) String() string     { return strings.Join(*_strs, ",") }
 
 var (
 	cmds  = []string{"go", "ndk-build"}
@@ -55,8 +49,7 @@ func ndk_build(cmds ...string) bool {
 
 func go_env(envs map[string]string) bool {
 	for key, val := range envs {
-		_, err = exec.Command("go", "env", "-w", key+"="+val).CombinedOutput()
-		if err != nil {
+		if _, err = exec.Command("go", "env", "-w", key+"="+val).CombinedOutput(); err != nil {
 			return false
 		}
 	}
@@ -103,30 +96,30 @@ func main() {
 	wd, err := os.Getwd()
 	if err != nil {
 		fmt.Println("[!] Error: \tcannot get workdir")
-		return
+		os.Exit(-1)
 	}
 
-	in := flag.String("in", filepath.Join(wd, "input"), "input dir")
-	out := flag.String("out", filepath.Join(wd, "output"), "output dir")
-	var names strs
-	flag.Var(&names, "names", "module names")
+	in := flag.String("in", "", "input dir")
+	id := flag.String("id", "", "input id")
+	out := flag.String("out", "", "output dir")
 	out_name := flag.String("outname", "instpkg", "output name")
 	garble := flag.Bool("garble", true, "use garble")
-	upx := flag.Bool("upx", false, "use upx")
 
 	flag.Parse()
 
+	if *in == "" || *out == "" {
+		fmt.Println("[!] Error: \tinput dir or output dir is empty")
+		os.Exit(-1)
+	}
+
 	if *garble {
 		cmds = append(cmds, "garble")
-	}
-	if *upx {
-		cmds = append(cmds, "upx")
 	}
 
 	for _, cmd := range cmds {
 		if _, err = exec.LookPath(cmd); err != nil {
 			fmt.Printf("[!] Error: \tcommand \"%s\" not found\n", cmd)
-			return
+			os.Exit(-1)
 		}
 	}
 	var shell string
@@ -137,73 +130,67 @@ func main() {
 			shell = path
 		} else {
 			fmt.Println("[!] Error: \tcommand \"bash\" or \"sh\" not found")
-			return
+			os.Exit(-1)
 		}
 	}
 
 	if !nga.PathExist(*in) || !nga.IsDir(*in) {
 		fmt.Printf("[!] Error: \tpath \"%s\" cannot be used\n", *in)
-		return
+		os.Exit(-1)
 	}
 	if !nga.PathExist(*out) {
-		err = os.MkdirAll(*out, os.ModePerm)
-		if err != nil {
+		if os.MkdirAll(*out, os.ModePerm) != nil {
 			fmt.Printf("[!] Error: \tcannot create dir \"%s\"\n", *out)
-			return
+			os.Exit(-1)
 		}
 	} else if !nga.IsDir(*out) {
 		fmt.Printf("[!] Error: \tpath \"%s\" cannot be used\n", *out)
-		return
+		os.Exit(-1)
 	}
 
 	var mods []string
-	if len(names) == 0 {
+	if *id == "" {
 		entries, err := os.ReadDir(*in)
 		if err != nil {
 			fmt.Printf("[!] Error: \tcannot read dir \"%s\"\n", *in)
-			return
+			os.Exit(-1)
 		}
 		for _, entry := range entries {
-			if nga.PathExist(filepath.Join(*in, entry.Name(), "root", "module.prop")) {
+			if nga.PathExist(filepath.Join(*in, entry.Name(), "src", "module.prop")) {
 				mods = append(mods, entry.Name())
 				fmt.Printf("[+] Added: \tModule \"%s\" to Build List\n", entry.Name())
 			}
 		}
 	} else {
-		for _, name := range names {
-			if nga.PathExist(filepath.Join(*in, name, "root", "module.prop")) {
-				mods = append(mods, name)
-				fmt.Printf("[+] Added: \tModule \"%s\" to Build List\n", name)
+		for id := range strings.SplitSeq(*id, "|") {
+			if nga.PathExist(filepath.Join(*in, id, "src", "module.prop")) {
+				mods = append(mods, id)
+				fmt.Printf("[+] Added: \tModule \"%s\" to Build List\n", id)
 			}
 		}
 	}
 
 	tmp_dir := filepath.Join(*out, "._mod_bld_tmp")
-	if nga.PathExist(tmp_dir) {
-		err = os.RemoveAll(tmp_dir)
-		if err != nil {
-			fmt.Printf("[!] Error: \tcannot delete dir \"%s\"\n", tmp_dir)
-			return
-		}
+	if nga.PathExist(tmp_dir) && os.RemoveAll(tmp_dir) != nil {
+		fmt.Printf("[!] Error: \tcannot delete dir \"%s\"\n", tmp_dir)
+		os.Exit(-1)
 	}
 	for _, mod := range mods {
 		mod_dir := filepath.Join(*in, mod)
 		fmt.Printf("[*] Building: \tModule \"%s\"\n", mod)
-		err = os.Chdir(wd)
-		if err != nil {
+		if os.Chdir(wd) != nil {
 			fmt.Printf("[!] Error: \tcannot change workdir to \"%s\"\n", wd)
-			return
+			os.Exit(-1)
 		}
-		err = os.MkdirAll(tmp_dir, os.ModePerm)
-		if err != nil {
+		if os.MkdirAll(tmp_dir, os.ModePerm) != nil {
 			fmt.Printf("[!] Error: \tcannot create dir \"%s\"\n", tmp_dir)
-			return
+			os.Exit(-1)
 		}
 		if cpp_dir := filepath.Join(mod_dir, "c++_native"); nga.PathExist(cpp_dir) {
 			entries, err := os.ReadDir(cpp_dir)
 			if err != nil {
 				fmt.Printf("[!] Error: \tcannot read dir \"%s\"\n", cpp_dir)
-				return
+				os.Exit(-1)
 			}
 			for _, entry := range entries {
 				bin_name := entry.Name()
@@ -215,16 +202,15 @@ func main() {
 					!nga.PathExist(filepath.Join(jni_dir, "Application.mk")) {
 					continue
 				}
-				err = os.Chdir(jni_dir)
-				if err != nil {
+				if os.Chdir(jni_dir) != nil {
 					fmt.Printf("[!] Error: \tcannot change workdir to \"%s\"\n", jni_dir)
-					return
+					os.Exit(-1)
 				}
 				var zygisk bool
 				mk_dat, err := os.ReadFile(mk_path)
 				if err != nil {
 					fmt.Printf("[!] Error: \tcannot read file \"%s\"\n", mk_path)
-					return
+					os.Exit(-1)
 				}
 				if strings.Contains(string(mk_dat), "\ninclude $(BUILD_SHARED_LIBRARY)") {
 					zygisk = true
@@ -242,26 +228,25 @@ func main() {
 					} else {
 						fmt.Printf("[!] Error: \tcannot build c++ executable \"%s\"\n", bin_name)
 					}
-					return
+					os.Exit(-1)
 				}
 				if zygisk_dir := filepath.Join(tmp_dir, "zygisk"); zygisk {
 					entries, err := os.ReadDir(lib_dir)
 					if err != nil {
 						fmt.Printf("[!] Error: \tcannot read dir \"%s\"\n", lib_dir)
-						return
+						os.Exit(-1)
 					}
-					err = os.MkdirAll(zygisk_dir, os.ModePerm)
-					if err != nil {
+					if os.MkdirAll(zygisk_dir, os.ModePerm) != nil {
 						fmt.Printf("[!] Error: \tcannot create dir \"%s\"\n", zygisk_dir)
-						return
+						os.Exit(-1)
 					}
 					for _, entry := range entries {
 						target_arch := entry.Name()
 						target_bin_name := "lib" + bin_name + ".so"
 						if target_bin := filepath.Join(lib_dir, target_arch, target_bin_name); nga.PathExist(target_bin) {
-							if err = nga.MoveFile(target_bin, filepath.Join(zygisk_dir, target_arch+".so")); err != nil {
+							if nga.MoveFile(target_bin, filepath.Join(zygisk_dir, target_arch+".so")) != nil {
 								fmt.Printf("[!] Error: \tcannot move c++ zygisk library \"%s\" (arch: %s)\n", bin_name, target_arch)
-								return
+								os.Exit(-1)
 							} else {
 								fmt.Printf("[→] Moved: \tC++ Zygisk Library \"%s\" (Arch: %s)\n", bin_name, target_arch)
 							}
@@ -271,20 +256,19 @@ func main() {
 					entries, err := os.ReadDir(lib_dir)
 					if err != nil {
 						fmt.Printf("[!] Error: \tcannot read dir \"%s\"\n", lib_dir)
-						return
+						os.Exit(-1)
 					}
 					for _, entry := range entries {
 						target_arch := entry.Name()
 						target_exe_dir := filepath.Join(tmp_dir, "bin", bin_name)
 						if target_bin := filepath.Join(lib_dir, target_arch, bin_name); nga.PathExist(target_bin) {
-							err = os.MkdirAll(target_exe_dir, os.ModePerm)
-							if err != nil {
+							if os.MkdirAll(target_exe_dir, os.ModePerm) != nil {
 								fmt.Printf("[!] Error: \tcannot create dir \"%s\"\n", target_exe_dir)
-								return
+								os.Exit(-1)
 							}
-							if err = nga.MoveFile(target_bin, filepath.Join(target_exe_dir, cpp_arch2arch(target_arch)+".elf")); err != nil {
+							if nga.MoveFile(target_bin, filepath.Join(target_exe_dir, cpp_arch2arch(target_arch)+".elf")) != nil {
 								fmt.Printf("[!] Error: \tcannot move c++ executable \"%s\" (arch: %s)\n", bin_name, target_arch)
-								return
+								os.Exit(-1)
 							} else {
 								fmt.Printf("[→] Moved: \tC++ Executable \"%s\" (Arch: %s)\n", bin_name, target_arch)
 							}
@@ -297,7 +281,7 @@ func main() {
 			entries, err := os.ReadDir(go_dir)
 			if err != nil {
 				fmt.Printf("[!] Error: \tcannot read dir \"%s\"\n", go_dir)
-				return
+				os.Exit(-1)
 			}
 			for _, entry := range entries {
 				bin_name := entry.Name()
@@ -308,34 +292,32 @@ func main() {
 					!nga.PathExist(filepath.Join(arch_dir, "go.mod")) {
 					continue
 				}
-				err = os.Chdir(arch_dir)
-				if err != nil {
+				if os.Chdir(arch_dir) != nil {
 					fmt.Printf("[!] Error: \tcannot change workdir to \"%s\"\n", bin_dir)
-					return
+					os.Exit(-1)
 				}
 				if !go_env(map[string]string{
 					"GOOS":   runtime.GOOS,
 					"GOARCH": runtime.GOARCH,
 				}) {
 					fmt.Println("[!] Error: \tcannot set go env")
-					return
+					os.Exit(-1)
 				}
 				archs, err := exec.Command("go", "run", ".").CombinedOutput()
 				if err != nil {
 					fmt.Println("[!] Error: \tcannot get arch")
-					return
+					os.Exit(-1)
 				}
-				err = os.Chdir(bin_dir)
-				if err != nil {
+				if os.Chdir(bin_dir) != nil {
 					fmt.Printf("[!] Error: \tcannot change workdir to \"%s\"\n", bin_dir)
-					return
+					os.Exit(-1)
 				}
 				if !go_env(map[string]string{
 					"GOOS":        "linux",
 					"CGO_ENABLED": "0",
 				}) {
 					fmt.Println("[!] Error: \tcannot set go env")
-					return
+					os.Exit(-1)
 				}
 				scanner := bufio.NewScanner(strings.NewReader(string(archs)))
 				for scanner.Scan() {
@@ -345,73 +327,71 @@ func main() {
 					}
 					if !go_env(map[string]string{"GOARCH": target_arch}) {
 						fmt.Println("[!] Error: \tcannot set go env")
-						return
+						os.Exit(-1)
 					}
 					if go_build(*garble) {
 						fmt.Printf("[✓] Built: \tGo Executable \"%s\" (Arch: %s)\n", bin_name, target_arch)
 					} else {
 						fmt.Printf("[!] Error: \tcannot build go executable \"%s\" (arch: %s)\n", bin_name, target_arch)
-						return
+						os.Exit(-1)
 					}
 					target_exe_dir := filepath.Join(tmp_dir, "bin", bin_name)
 					if target_bin := filepath.Join(bin_dir, bin_name); nga.PathExist(target_bin) {
-						err = os.MkdirAll(target_exe_dir, os.ModePerm)
-						if err != nil {
+						if os.MkdirAll(target_exe_dir, os.ModePerm) != nil {
 							fmt.Printf("[!] Error: \tcannot create dir \"%s\"\n", target_exe_dir)
-							return
+							os.Exit(-1)
 						}
-						if err = nga.MoveFile(target_bin, filepath.Join(target_exe_dir, go_arch2arch(target_arch)+".elf")); err != nil {
+						if nga.MoveFile(target_bin, filepath.Join(target_exe_dir, go_arch2arch(target_arch)+".elf")) != nil {
 							fmt.Printf("[!] Error: \tcannot move go executable \"%s\" (arch: %s)\n", bin_name, target_arch)
-							return
+							os.Exit(-1)
 						} else {
 							fmt.Printf("[→] Moved: \tGo Executable \"%s\" (Arch: %s)\n", bin_name, target_arch)
 						}
 					}
 				}
-				if err = scanner.Err(); err != nil {
+				if scanner.Err() != nil {
 					fmt.Println("[!] Error: \tcannot scan archs")
-					return
+					os.Exit(-1)
 				}
 				if !go_env(map[string]string{
 					"GOOS":   runtime.GOOS,
 					"GOARCH": runtime.GOARCH,
 				}) {
 					fmt.Println("[!] Error: \tcannot set go env")
-					return
+					os.Exit(-1)
 				}
 			}
 		}
-		err = os.Chdir(wd)
-		if err != nil {
+		if os.Chdir(wd) != nil {
 			fmt.Printf("[!] Error: \tcannot change workdir to \"%s\"\n", wd)
-			return
+			os.Exit(-1)
 		}
 
-		if err = nga.CopyDir(
+		if nga.CopyDir(
 			filepath.Join(wd, "src", "META-INF"),
 			filepath.Join(tmp_dir, "META-INF"),
-		); err != nil {
+		) != nil {
 			fmt.Println("[!] Error: \tcannot copy recovery flash script")
-			return
+			os.Exit(-1)
 		} else {
 			fmt.Printf("[=] Copied: \tRecovery Flash Script for Module \"%s\"\n", mod)
 		}
 
 		nga_dir := filepath.Join(wd, "src", "nga-sdk", "src", "shell")
-		if err = nga.CopyFile(
+		if nga.CopyFile(
 			filepath.Join(nga_dir, "nga-utils.sh"),
 			filepath.Join(tmp_dir, "nga-utils.sh"),
-		); err != nil {
+		) != nil {
 			fmt.Println("[!] Error: \tcannot copy nga shell utils")
-			return
+			os.Exit(-1)
 		} else {
 			fmt.Printf("[=] Copied: \tNGA Shell Utils for Module \"%s\"\n", mod)
 		}
 
-		root_dir := filepath.Join(mod_dir, "root")
-		if err = nga.CopyDir(root_dir, tmp_dir); err != nil {
+		src_dir := filepath.Join(mod_dir, "src")
+		if nga.CopyDir(src_dir, tmp_dir) != nil {
 			fmt.Printf("[!] Error: \tcannot copy module \"%s\" files\n", mod)
-			return
+			os.Exit(-1)
 		} else {
 			fmt.Printf("[=] Copied: \tModule \"%s\" Files\n", mod)
 		}
@@ -420,59 +400,39 @@ func main() {
 		prop_dat, err := os.ReadFile(filepath.Join(tmp_dir, "module.prop"))
 		if err != nil {
 			fmt.Printf("[!] Error: \tcannot read file \"%s\"\n", prop_path)
-			return
+			os.Exit(-1)
 		}
 		if strings.Contains(string(prop_dat), "咲汀") ||
 			strings.Contains(string(prop_dat), "Sakitin") ||
 			strings.Contains(string(prop_dat), "OOM. WG.") {
-			if err = nga.CopyFile(
+			if nga.CopyFile(
 				filepath.Join(filepath.Dir(wd), "LICENSE.txt"),
 				filepath.Join(tmp_dir, "LICENSE.txt"),
-			); err != nil {
+			) != nil {
 				fmt.Println("[!] Error: \tcannot copy F2DLPR License")
-				return
+				os.Exit(-1)
 			} else {
 				fmt.Printf("[=] Copied: \tF2DLPR License for Module \"%s\"\n", mod)
 			}
-		}
-
-		if *upx {
-			if err = filepath.WalkDir(filepath.Join(tmp_dir, "bin"), func(path string, dir fs.DirEntry, err error) error {
-				if err != nil {
-					return err
-				}
-				if !dir.IsDir() {
-					if _, err = exec.Command("upx", "--best", path).CombinedOutput(); err != nil {
-						fmt.Printf("[!] Error: \tcannot use upx for executable \"%s\"\n", filepath.Base(path))
-					} else {
-						fmt.Printf("[✓] Compressed: \tExecutable \"%s\" by UPX\n", filepath.Base(path))
-					}
-				}
-				return nil
-			}); err != nil {
-				fmt.Println("[!] Error: \tcannot use upx")
-				return
-			}
-
 		}
 
 		enc_path, err := filepath.Rel(wd, filepath.Join(nga_dir, "nga-enc.sh"))
 		enc_path = filepath.ToSlash(enc_path)
 		if err != nil {
 			fmt.Printf("[!] Error: \tcannot get relative path for \"%s\"\n", filepath.Join(nga_dir, "nga-enc.sh"))
-			return
+			os.Exit(-1)
 		}
 		utils_path, err := filepath.Rel(wd, filepath.Join(tmp_dir, "nga-utils.sh"))
 		utils_path = filepath.ToSlash(utils_path)
 		if err != nil {
 			fmt.Printf("[!] Error: \tcannot get relative path for \"%s\"\n", filepath.Join(nga_dir, "nga-utils.sh"))
-			return
+			os.Exit(-1)
 		}
 		cust_path, err := filepath.Rel(wd, filepath.Join(tmp_dir, "customize.sh"))
 		cust_path = filepath.ToSlash(cust_path)
 		if err != nil {
 			fmt.Printf("[!] Error: \tcannot get relative path for \"%s\"\n", filepath.Join(nga_dir, "customize.sh"))
-			return
+			os.Exit(-1)
 		}
 		if nga.PathExist(utils_path) {
 			if _, err = exec.Command(shell,
@@ -480,7 +440,7 @@ func main() {
 				utils_path,
 			).CombinedOutput(); err != nil {
 				fmt.Printf("[!] Error: \tcannot encrypt script \"%s\"\n", "nga-utils.sh")
-				return
+				os.Exit(-1)
 			} else {
 				fmt.Printf("[$] Encrypted: \tScript \"%s\"\n", "nga-utils.sh")
 			}
@@ -491,15 +451,15 @@ func main() {
 				cust_path,
 			).CombinedOutput(); err != nil {
 				fmt.Printf("[!] Error: \tcannot encrypt script \"%s\"\n", "customize.sh")
-				return
+				os.Exit(-1)
 			} else {
 				fmt.Printf("[$] Encrypted: \tScript \"%s\"\n", "customize.sh")
 			}
 		}
 
 		var buffer bytes.Buffer
-		if err = filepath.Walk(tmp_dir, func(path string, info os.FileInfo, err error) error {
-			if err != nil || info.IsDir() || strings.Contains(path, "META-INF") {
+		if filepath.Walk(tmp_dir, func(path string, info os.FileInfo, err error) error {
+			if err != nil || info.IsDir() || strings.HasPrefix(path, "META-INF") {
 				return nil
 			}
 			file, err := os.Open(path)
@@ -519,99 +479,97 @@ func main() {
 			}
 			buffer.WriteString(hex.EncodeToString(hash2.Sum(nil)) + " " + filepath.ToSlash(rel) + "\n")
 			return nil
-		}); err != nil {
+		}) != nil {
 			fmt.Println("[!] Error: \tcannot get hashes")
-			return
+			os.Exit(-1)
 		}
 		hashes_dat := buffer.Bytes()
 		if len(hashes_dat) > 0 && hashes_dat[len(hashes_dat)-1] == '\n' {
 			hashes_dat = hashes_dat[:len(hashes_dat)-1]
 		}
-		var encoded bytes.Buffer
-		gz := gzip.NewWriter(&encoded)
-		b64 := base64.NewEncoder(base64.StdEncoding, gz)
-		if _, err = b64.Write(hashes_dat); err != nil {
-			fmt.Println("[!] Error: \tcannot write base64")
-			return
-		}
-		if err = b64.Close(); err != nil {
-			fmt.Println("[!] Error: \tcannot close base64")
-			return
-		}
-		if err = gz.Close(); err != nil {
-			fmt.Println("[!] Error: \tcannot close gunzip")
-			return
-		}
-		if err = os.WriteFile(filepath.Join(tmp_dir, "hashList.dat"), encoded.Bytes(), os.ModePerm); err != nil {
-			fmt.Println("[!] Error: \tcannot write hashes")
-			return
-		} else {
-			fmt.Printf("[✓] Wrote: \tModule \"%s\" File Hashes\n", mod)
-		}
+		func() {
+			var encoded bytes.Buffer
+			gz := gzip.NewWriter(&encoded)
+			b64 := base64.NewEncoder(base64.StdEncoding, gz)
+			defer gz.Close()
+			defer b64.Close()
+			if _, err = b64.Write(hashes_dat); err != nil {
+				fmt.Println("[!] Error: \tcannot write base64")
+				os.Exit(-1)
+			}
+			if os.WriteFile(filepath.Join(tmp_dir, "hashList.dat"), encoded.Bytes(), os.ModePerm) != nil {
+				fmt.Println("[!] Error: \tcannot write hashes")
+				os.Exit(-1)
+			} else {
+				fmt.Printf("[✓] Wrote: \tModule \"%s\" File Hashes\n", mod)
+			}
+		}()
 
 		out_dir := filepath.Join(*out, mod)
-		if err = os.MkdirAll(out_dir, os.ModePerm); err != nil {
+		if os.MkdirAll(out_dir, os.ModePerm) != nil {
 			fmt.Printf("[!] Error: \tcannot create module \"%s\" output dir\n", mod)
-			return
+			os.Exit(-1)
 		} else {
 			fmt.Printf("[+] Created: \tModule \"%s\" Output Dir\n", mod)
 		}
 		zip_name := *out_name + ".zip"
 		out_path := filepath.Join(out_dir, zip_name)
-		zip_file, err := os.Create(out_path)
-		if err != nil {
-			fmt.Printf("[!] Error: \tcannot create module \"%s\" output zip\n", mod)
-			return
-		}
-		zip_writer := zip.NewWriter(zip_file)
-		zip_writer.RegisterCompressor(zip.Deflate, func(w io.Writer) (io.WriteCloser, error) {
-			return flate.NewWriter(w, flate.BestCompression)
-		})
-		if err = filepath.WalkDir(tmp_dir, func(path string, dir os.DirEntry, err error) error {
+		func() {
+			zip_file, err := os.Create(out_path)
 			if err != nil {
+				fmt.Printf("[!] Error: \tcannot create module \"%s\" output zip\n", mod)
+				os.Exit(-1)
+			}
+			defer zip_file.Close()
+			zip_writer := zip.NewWriter(zip_file)
+			zip_writer.RegisterCompressor(zip.Deflate, func(w io.Writer) (io.WriteCloser, error) {
+				return flate.NewWriter(w, flate.BestCompression)
+			})
+			defer zip_writer.Close()
+			if filepath.WalkDir(tmp_dir, func(path string, dir os.DirEntry, err error) error {
+				if err != nil {
+					return err
+				}
+				if dir.IsDir() {
+					return nil
+				}
+				rel_path, err := filepath.Rel(tmp_dir, path)
+				if err != nil {
+					return err
+				}
+				rel_path = filepath.ToSlash(rel_path)
+				file, err := os.Open(path)
+				if err != nil {
+					return err
+				}
+				defer file.Close()
+				info, err := dir.Info()
+				if err != nil {
+					return err
+				}
+				header, err := zip.FileInfoHeader(info)
+				if err != nil {
+					return err
+				}
+				header.Name = rel_path
+				header.Method = zip.Deflate
+				header.Modified = time0
+				writer, err := zip_writer.CreateHeader(header)
+				if err != nil {
+					return err
+				}
+				_, err = io.Copy(writer, file)
 				return err
+			}) != nil {
+				fmt.Printf("[!] Error: \tcannot create module \"%s\" output zip \"%s\"\n", mod, zip_name)
+				os.Exit(-1)
+			} else {
+				fmt.Printf("[+] Created: \tModule \"%s\" Output Zip \"%s\"\n", mod, zip_name)
 			}
-			if dir.IsDir() {
-				return nil
-			}
-			rel_path, err := filepath.Rel(tmp_dir, path)
-			if err != nil {
-				return err
-			}
-			rel_path = filepath.ToSlash(rel_path)
-			file, err := os.Open(path)
-			if err != nil {
-				return err
-			}
-			defer file.Close()
-			info, err := dir.Info()
-			if err != nil {
-				return err
-			}
-			header, err := zip.FileInfoHeader(info)
-			if err != nil {
-				return err
-			}
-			header.Name = rel_path
-			header.Method = zip.Deflate
-			header.Modified = time0
-			writer, err := zip_writer.CreateHeader(header)
-			if err != nil {
-				return err
-			}
-			_, err = io.Copy(writer, file)
-			return err
-		}); err != nil {
-			fmt.Printf("[!] Error: \tcannot create module \"%s\" output zip \"%s\"\n", mod, zip_name)
-			return
-		} else {
-			fmt.Printf("[+] Created: \tModule \"%s\" Output Zip \"%s\"\n", mod, zip_name)
-		}
-		_ = zip_writer.Close()
-		_ = zip_file.Close()
-		if err = os.RemoveAll(tmp_dir); err != nil {
+		}()
+		if os.RemoveAll(tmp_dir) != nil {
 			fmt.Printf("[!] Error: \tcannot clean module \"%s\" build cache\n", mod)
-			return
+			os.Exit(-1)
 		} else {
 			fmt.Printf("[-] Cleaned: \tModule \"%s\" Build Cache\n", mod)
 		}

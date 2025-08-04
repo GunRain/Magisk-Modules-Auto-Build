@@ -1,32 +1,36 @@
-# Magisk Modules Auto Build
+# 模块构建工具
 
-[NGA SDK](https://gitcode.com/OutOfMemories-WorkGroup/NGA-SDK)(构建时自动集成Shell Utils，自动加密`customize.sh`和`nga-utils.sh`)
+[NGA SDK](https://github.com/TianwanTW/NGA-SDK) (构建时自动集成 Shell Utils，自动加密`customize.sh`和`nga-utils.sh`)
 
-[模块示例](https://gitcode.com/OutOfMemories-WorkGroup/Magisk-Module-EG)
+[模块示例](https://github.com/OOM-WG/ROOT-Module-EG) (使用本工具需要从此使用模板)
 
-# 使用方法(仅适用于GitHub，非GitHub只能本地构建然后手动发布)
+## 依赖
 
-复制模块示例为自己的仓库，添加自己的代码
+- [Android NDK](https://developer.android.google.cn/ndk)
+- [Go](https://golang.google.cn)
+- [Garble (可选)](https://github.com/burrowers/garble)
 
-复制本仓库为自己的仓库，然后运行action (**请尽量不要fork！**)
+## 使用方法 1 (GitHub Action)
 
-在下方按钮创建token，添加进复制后的本仓库的密钥，密钥名称为`USER_GITHUB_TOKEN`
+1. 前往示例仓库通过模板生成新项目
+2. 修改模块项目代码
+3. 通过 GitHub Action 手动或自行修改 Workflow 来实现构建模块
 
-[![](./img/gh.svg)](https://github.com/settings/tokens)
+## 使用方法 2 (本地构建)
 
-然后运行action按照需求填写参数  
+1. 前往示例仓库通过模板生成新项目
+2. 将本项目与模块项目克隆至本地
+3. 修改模块项目代码
+4. 通过 Go 运行本项目的构建工具来实现构建模块
 
-![](https://img.nightrainmilkyway.cn/img/202501251135576.png)  
-![](https://img.nightrainmilkyway.cn/img/202501251135538.png)
-
-# 注意事项
+## 项目结构
 
 > [!TIP]
-> 模块仓库应该遵循以下目录结构:
+> 模块项目应该遵循以下目录结构
 
-``` plaintext
+```plaintext
 |
-├── root                    <--- Magisk模块的目录                 
+├── src                     <--- 模块的目录
 │   │
 │   │      *** 模块配置文件 ***
 │   │
@@ -36,8 +40,8 @@
 │   │
 │   ├── customize.sh        <--- 此脚本用于控制安装模块时的行为
 │   ├── action.sh           <--- 此脚本可在root管理器内通过按钮提供给用户执行
-│   │                              (Magisk 27008+/KernelSU 1.0.2+/APatch 11039+，低版本不支持该按钮，开发者应避免不支持而是建议使用者脱离啃老
-│   │                              或者建议使用者从KernelSU转向KernelSU Next等分支以获取更好的体验(KSU官方版非GKI百分百用不了啦！))
+│   │                              (SakitinSU默认支持/Magisk 27008+/KernelSU 1.0.2+/APatch 11039+，低版本不支持该按钮，开发者应避免不支持而是
+│   │                               建议使用者脱离啃老或者建议使用者从KernelSU转向KernelSU Next等分支以获取更好的体验(KSU官方版非GKI百分百用不了啦！))
 │   ├── post-fs-data.sh     <--- 此脚本将会在 post-fs-data 模式下运行
 │   ├── post-mount.sh       <--- 此脚本将会在 post-mount 模式下运行 (仅受KernelSU/APatch支持)
 │   ├── service.sh          <--- 此脚本将会在 late_start 服务模式下运行
@@ -65,7 +69,7 @@
 │   │   └── ...             <--- 其他源码文件
 │   │
 │   └── ...                 <--- 其他C++项目
-│ 
+│
 ├── go_native               <--- Go源码的目录
 │   ├── <项目名称>          <--- 项目名称 (必须和“module”值的最后名称相同，即生成后的二进制名称)
 │   │   ├── arch            <--- 架构配置目录
@@ -77,7 +81,7 @@
 │   │   ├── go.sum          <--- 有依赖时生成的校验文件
 │   │   └── ...             <--- 其他源码文件
 │   └── ...                 <--- 其他Go项目
-│  
+│
 ├── README.md               <--- 仓库说明文件
 ├── changelog.md            <--- 模块更新日志 (可自定义名称/路径)
 ├── update.json             <--- 用于更新模块的 JSON 文件 (可自定义名称/路径)
@@ -85,4 +89,7 @@
 └── ...                     <--- 其他用于配置Git仓库的文件或自定义文件
 ```
 
-模块示例仓库已经配置好这些内容，可直接fork并按需修改以使用
+模块示例仓库已经配置好这些内容，可直接使用模板并按需修改以使用
+
+> [!WARNING]
+> 不需要的文件请自行删除！请避免对用户设备造成不必要的负担！
