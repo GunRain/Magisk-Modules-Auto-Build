@@ -1,5 +1,5 @@
 #====================================================================================================
-# Copyright (C) 2016-present Anne Sakitin (Tianwan Ayana).                                          =
+# Copyright (C) 2016-present ShIroRRen.                                                             =
 #                                                                                                   =
 # Part of the NGA project.                                                                          =
 # Licensed under the F2DLPR License.                                                                =

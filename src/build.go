@@ -421,9 +421,9 @@ func main() {
 			fmt.Printf("[!] Error: \tcannot read file \"%s\"\n", prop_path)
 			os.Exit(-1)
 		}
-		if strings.Contains(string(prop_dat), "咲汀") ||
-			strings.Contains(string(prop_dat), "Sakitin") ||
-			strings.Contains(string(prop_dat), "OOM. WG.") {
+		if strings.Contains(string(prop_dat), "白彩恋") ||
+			strings.Contains(string(prop_dat), "ShIroRRen") ||
+			strings.Contains(string(prop_dat), "O.O.M. W.G.") {
 			if nga.CopyFile(
 				filepath.Join(filepath.Dir(wd), "LICENSE.txt"),
 				filepath.Join(tmp_dir, "LICENSE.txt"),
@@ -441,38 +441,23 @@ func main() {
 			fmt.Printf("[!] Error: \tcannot get relative path for \"%s\"\n", filepath.Join(nga_dir, "nga-enc.sh"))
 			os.Exit(-1)
 		}
-		utils_path, err := filepath.Rel(wd, filepath.Join(tmp_dir, "nga-utils.sh"))
-		utils_path = filepath.ToSlash(utils_path)
-		if err != nil {
-			fmt.Printf("[!] Error: \tcannot get relative path for \"%s\"\n", filepath.Join(nga_dir, "nga-utils.sh"))
-			os.Exit(-1)
-		}
-		cust_path, err := filepath.Rel(wd, filepath.Join(tmp_dir, "customize.sh"))
-		cust_path = filepath.ToSlash(cust_path)
-		if err != nil {
-			fmt.Printf("[!] Error: \tcannot get relative path for \"%s\"\n", filepath.Join(nga_dir, "customize.sh"))
-			os.Exit(-1)
-		}
-		if nga.PathExist(utils_path) {
-			if _, err = exec.Command(shell,
-				enc_path,
-				utils_path,
-			).CombinedOutput(); err != nil {
-				fmt.Printf("[!] Error: \tcannot encrypt script \"%s\"\n", "nga-utils.sh")
+		for _, sh := range []string{"nga-utils.sh", "customize.sh", "install.sh", "config.sh", "action.sh"} {
+			sh_path, err := filepath.Rel(wd, filepath.Join(tmp_dir, sh))
+			sh_path = filepath.ToSlash(sh_path)
+			if err != nil {
+				fmt.Printf("[!] Error: \tcannot get relative path for \"%s\"\n", filepath.Join(nga_dir, sh))
 				os.Exit(-1)
-			} else {
-				fmt.Printf("[$] Encrypted: \tScript \"%s\"\n", "nga-utils.sh")
 			}
-		}
-		if nga.PathExist(cust_path) {
-			if _, err = exec.Command(shell,
-				enc_path,
-				cust_path,
-			).CombinedOutput(); err != nil {
-				fmt.Printf("[!] Error: \tcannot encrypt script \"%s\"\n", "customize.sh")
-				os.Exit(-1)
-			} else {
-				fmt.Printf("[$] Encrypted: \tScript \"%s\"\n", "customize.sh")
+			if nga.PathExist(sh_path) {
+				if _, err = exec.Command(shell,
+					enc_path,
+					sh_path,
+				).CombinedOutput(); err != nil {
+					fmt.Printf("[!] Error: \tcannot encrypt script \"%s\"\n", sh)
+					os.Exit(-1)
+				} else {
+					fmt.Printf("[$] Encrypted: \tScript \"%s\"\n", sh)
+				}
 			}
 		}
 
