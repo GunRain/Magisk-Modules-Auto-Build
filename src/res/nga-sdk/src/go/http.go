@@ -1,5 +1,5 @@
 //====================================================================================================
-// Copyright (C) 2016-present ShIroRRen.                                                             =
+// Copyright (C) 2016-present ShIroRRen <http://shiror.ren>.                                         =
 //                                                                                                   =
 // Part of the NGA project.                                                                          =
 // Licensed under the F2DLPR License.                                                                =
@@ -8,8 +8,8 @@
 // Provided "AS IS", WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,                                   =
 // unless required by applicable law or agreed to in writing.                                        =
 //                                                                                                   =
-// For details about the NGA project, visit: http://app.niggergo.work.                               =
-// For details about the F2DLPR License terms and conditions, visit: http://license.fileto.download. =
+// For the NGA project, visit: <http://app.niggergo.work>.                                           =
+// For the F2DLPR License terms and conditions, visit: <http://license.fileto.download>.             =
 //====================================================================================================
 
 package nga
