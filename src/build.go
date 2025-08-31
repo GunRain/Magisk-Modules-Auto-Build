@@ -570,6 +570,7 @@ func main() {
 			} else {
 				fmt.Printf("[+] Created: \tModule \"%s\" Output Zip \"%s\"\n", mod, zip_name)
 			}
+			_ = zip_writer.SetComment("https://github.com/OOM-WG/ROOT-Modules-Auto-Builder.git")
 		}()
 		if os.RemoveAll(tmp_dir) != nil {
 			fmt.Printf("[!] Error: \tcannot clean module \"%s\" build cache\n", mod)
