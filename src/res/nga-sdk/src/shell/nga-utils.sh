@@ -308,9 +308,9 @@ nga_install_modules() { for zipPath in "$@"; do nga_install_module "$zipPath"; d
 nga_install_init() {
     [ -z "$MODPATH" ] && nga_abort 'Value "MODPATH" does not exist!'
 
-    # For Sakitin
+    # For Latest File
     [ "$1" = official ] && {
-        nga_print 'Official website: https://www.mod.latestfile.zip'
+        nga_print 'Official website: https://latestfile.zip'
         shift
     }
 
@@ -353,7 +353,7 @@ nga_install_done() {
     }
 
     # Clean useless files (just simply)
-    # Keep license for SakitinSU
+    # Keep license for ShiroSU
     for file in README CHANGELOG NOTICE CONTRIBUTING SECURITY; do
         for suffix in '' '.txt' '.md' '.mkd'; do
             [ -f "$MODPATH/$file$suffix" ] && del -rf "$MODPATH/$file$suffix"
