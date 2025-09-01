@@ -494,14 +494,18 @@ func main() {
 		}
 		func() {
 			var encoded bytes.Buffer
-			gz := gzip.NewWriter(&encoded)
+			gz, err := gzip.NewWriterLevel(&encoded, gzip.BestCompression)
+			if err != nil {
+				fmt.Println("[!] Error: \tcannot create gzip writer")
+				os.Exit(-1)
+			}
 			b64 := base64.NewEncoder(base64.StdEncoding, gz)
-			defer gz.Close()
-			defer b64.Close()
 			if _, err = b64.Write(hashes_dat); err != nil {
 				fmt.Println("[!] Error: \tcannot write base64")
 				os.Exit(-1)
 			}
+			_ = b64.Close()
+			_ = gz.Close()
 			if os.WriteFile(filepath.Join(tmp_dir, "hashList.dat"), encoded.Bytes(), os.ModePerm) != nil {
 				fmt.Println("[!] Error: \tcannot write hashes")
 				os.Exit(-1)
