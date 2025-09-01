@@ -423,6 +423,7 @@ func main() {
 		}
 		if strings.Contains(string(prop_dat), "白彩恋") ||
 			strings.Contains(string(prop_dat), "ShIroRRen") ||
+			strings.Contains(string(prop_dat), "ShIroR.Ren") ||
 			strings.Contains(string(prop_dat), "O.O.M. W.G.") {
 			if nga.CopyFile(
 				filepath.Join(filepath.Dir(wd), "LICENSE.txt"),
@@ -570,7 +571,7 @@ func main() {
 			} else {
 				fmt.Printf("[+] Created: \tModule \"%s\" Output Zip \"%s\"\n", mod, zip_name)
 			}
-			_ = zip_writer.SetComment("https://github.com/OOM-WG/ROOT-Modules-Auto-Builder.git")
+			_ = zip_writer.SetComment("Built by <https://github.com/OOM-WG/ROOT-Modules-Auto-Builder.git>\nPowered by ShIroRRen <https://shiror.ren>")
 		}()
 		if os.RemoveAll(tmp_dir) != nil {
 			fmt.Printf("[!] Error: \tcannot clean module \"%s\" build cache\n", mod)
