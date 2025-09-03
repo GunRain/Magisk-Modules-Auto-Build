@@ -464,7 +464,14 @@ func main() {
 
 		var buffer bytes.Buffer
 		if filepath.Walk(tmp_dir, func(path string, info os.FileInfo, err error) error {
-			if err != nil || info.IsDir() || strings.HasPrefix(path, "META-INF") {
+			if err != nil {
+				return err
+			}
+			rel, err := filepath.Rel(tmp_dir, path)
+			if err != nil {
+				return err
+			}
+			if info.IsDir() || strings.HasPrefix(rel, "META-INF") {
 				return nil
 			}
 			file, err := os.Open(path)
@@ -478,10 +485,6 @@ func main() {
 			}
 			hash2 := sha1.New()
 			hash2.Write([]byte(hex.EncodeToString(hash1.Sum(nil))))
-			rel, err := filepath.Rel(tmp_dir, path)
-			if err != nil {
-				return err
-			}
 			buffer.WriteString(hex.EncodeToString(hash2.Sum(nil)) + " " + filepath.ToSlash(rel) + "\n")
 			return nil
 		}) != nil {
@@ -493,18 +496,32 @@ func main() {
 			hashes_dat = hashes_dat[:len(hashes_dat)-1]
 		}
 		func() {
+			var b64Buf bytes.Buffer
+			b64 := base64.NewEncoder(base64.StdEncoding, &b64Buf)
+			if _, err := b64.Write(hashes_dat); err != nil {
+				fmt.Println("[!] Error: \tcannot write base64")
+				os.Exit(-1)
+			}
+			_ = b64.Close()
+			b64Bytes := b64Buf.Bytes()
+			for idx, char := range b64Bytes {
+				switch {
+				case char >= 'a' && char <= 'z':
+					b64Bytes[idx] = char - 32
+				case char >= 'A' && char <= 'Z':
+					b64Bytes[idx] = char + 32
+				}
+			}
 			var encoded bytes.Buffer
 			gz, err := gzip.NewWriterLevel(&encoded, gzip.BestCompression)
 			if err != nil {
 				fmt.Println("[!] Error: \tcannot create gzip writer")
 				os.Exit(-1)
 			}
-			b64 := base64.NewEncoder(base64.StdEncoding, gz)
-			if _, err = b64.Write(hashes_dat); err != nil {
-				fmt.Println("[!] Error: \tcannot write base64")
+			if _, err := gz.Write(b64Bytes); err != nil {
+				fmt.Println("[!] Error: \tcannot write gzip")
 				os.Exit(-1)
 			}
-			_ = b64.Close()
 			_ = gz.Close()
 			if os.WriteFile(filepath.Join(tmp_dir, "hashList.dat"), encoded.Bytes(), os.ModePerm) != nil {
 				fmt.Println("[!] Error: \tcannot write hashes")

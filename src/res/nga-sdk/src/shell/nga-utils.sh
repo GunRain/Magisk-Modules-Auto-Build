@@ -215,6 +215,7 @@ get_app_lib() {
 }
 
 # 此函数较为特殊，用于批量安装模块功能，请完整阅读并理解此函数的代码后再使用此函数
+# shellcheck disable=SC2154
 run_install_list() {
 	local func_head="$1"
 	local func_num="$2"
@@ -239,12 +240,9 @@ run_install_list() {
 			done
 		})"
 		newline
-		# shellcheck disable=SC2154
 		nga_print "抉择$num: $opt_name"
 		newline
-		# shellcheck disable=SC2154
 		[ "$cancel" = true ] && nga_print '内容0: 取消此抉择'
-		# shellcheck disable=SC2154
 		for index_num in $(seq 1 "$opt_num"); do
 			nga_print "内容$index_num: $(eval "echo -n \"\$opt_name_$index_num\"")"
 		done
@@ -265,7 +263,6 @@ run_install_list() {
 					true
 				} || {
 					nga_print "已确定选择内容: 内容$target_opt"
-					# shellcheck disable=SC2154
 					eval "$target_func_head$target_opt"
 				}
 				newline
@@ -318,7 +315,7 @@ nga_install_init() {
 	local hashListFile="$MODPATH/hashList.dat"
 	[ -f "$hashListFile" ] || nga_abort 'File "hashList.dat" does not exist!'
 	local hashList
-	hashList="$(zcat "$hashListFile" | base64 -d)"
+	hashList="$(zcat "$hashListFile" | tr a-zA-Z A-Za-z | base64 -d)"
 	find "$MODPATH/" -type f -not -path '*META-INF*' -not -name hashList.dat | while IFS= read -r file; do
 		str_eq "${file#"$MODPATH/"}" "$@" && continue
 		[ "$(echo -n "$hashList" | grep -E " ${file#"$MODPATH/"}$" | awk '{print $1}')" = "$(echo -n "$(sha384sum "$file" | awk '{print $1}')" | sha1sum | awk '{print $1}')" ] || nga_abort "Failed to verify file \"${file#"$MODPATH/"}\"!"
@@ -344,11 +341,13 @@ nga_install_done() {
 	# Clean zygisk libs
 	[ -d "$MODPATH/zygisk" ] && {
 		case "$ARCH" in
-			arm64) find "$MODPATH/zygisk" \( -name "riscv*.so" -o -name "x*.so" \) -delete ;;
-			arm) find "$MODPATH/zygisk" \( -name "riscv*.so" -o -name "x*.so" -o -name "*64*.so" \) -delete ;;
-			x64) find "$MODPATH/zygisk" -name "riscv*.so" -delete ;;
-			x86) find "$MODPATH/zygisk" \( -name "riscv*.so" -o -name "*64*.so" \) -delete ;;
-			riscv64) find "$MODPATH/zygisk" \( -name "arm*.so" -o -name "x*.so" \) -delete ;;
+			arm64) find "$MODPATH/zygisk" \( -name "mips*.so" -o -name "riscv*.so" -o -name "x*.so" \) -delete ;;
+			arm) find "$MODPATH/zygisk" \( -name "mips*.so" -o -name "riscv*.so" -o -name "x*.so" -o -name "*64*.so" \) -delete ;;
+			x64) find "$MODPATH/zygisk" \( -name "mips*.so" -o -name "riscv*.so" \) -delete ;;
+			x86) find "$MODPATH/zygisk" \( -name "mips*.so" -o -name "riscv*.so" -o -name "*64*.so" \) -delete ;;
+			riscv64) find "$MODPATH/zygisk" \( -name "mips*.so" -o -name "arm*.so" -o -name "x*.so" \) -delete ;;
+			mips64) find "$MODPATH/zygisk" \( -name "riscv*.so" -o -name "arm*.so" -o -name "x*.so" \) -delete ;;
+			mips) find "$MODPATH/zygisk" \( -name "riscv*.so" -o -name "arm*.so" -o -name "x*.so" -o -name "*64*.so" \) -delete ;;
 		esac
 	}
 
@@ -376,6 +375,11 @@ nga_install_done() {
 			export ABI32=armeabi-v7a
 			export IS64BIT=false
 			;;
+		armeabi)
+			export ARCH=arm
+			export ABI32=armeabi
+			export IS64BIT=false
+			;;
 		x86_64)
 			export ARCH=x64
 			export ABI32=x86
@@ -390,6 +394,16 @@ nga_install_done() {
 			export ARCH=riscv64
 			export ABI32=riscv32
 			export IS64BIT=true
+			;;
+		mips64)
+			export ARCH=mips64
+			export ABI32=mips
+			export IS64BIT=true
+			;;
+		mips)
+			export ARCH=mips
+			export ABI32=mips
+			export IS64BIT=false
 			;;
 	esac
 }
