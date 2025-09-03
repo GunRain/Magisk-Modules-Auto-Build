@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/sbin/bash
 
 # Recovery flash script, not used in root manager!
 
@@ -14,13 +14,9 @@
 # For the F2DLPR License terms and conditions, visit: <http://license.fileto.download>.             =
 #====================================================================================================
 
-# shellcheck disable=SC2034,SC1091
+# shellcheck disable=SC1091
 
-umask 000
-OUTFD="$2"
-ZIPFILE="$3"
-mount /data
-[ -f '/data/adb/magisk/util_functions.sh' ] && . '/data/adb/magisk/util_functions.sh' || exit
+umask 000; export OUTFD="$2"; export ZIPFILE="$3"; mount /data 2>/dev/null
+[ -f /data/adb/magisk/util_functions.sh ] && . /data/adb/magisk/util_functions.sh || exit
 install_module
-true
-exit
+true; exit
