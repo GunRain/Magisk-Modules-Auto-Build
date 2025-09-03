@@ -19,4 +19,4 @@
 umask 000; export OUTFD="$2"; export ZIPFILE="$3"; mount /data 2>/dev/null
 [ -f /data/adb/magisk/util_functions.sh ] && . /data/adb/magisk/util_functions.sh || exit
 install_module
-true; exit
+: D; exit

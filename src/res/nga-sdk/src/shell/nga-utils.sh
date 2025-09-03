@@ -260,7 +260,7 @@ run_install_list() {
 				newline
 				[ "$target_opt" -eq 0 ] && {
 					nga_print '已确定选择内容: 取消此抉择'
-					true
+					:
 				} || {
 					nga_print "已确定选择内容: 内容$target_opt"
 					eval "$target_func_head$target_opt"
@@ -414,4 +414,4 @@ nga_install_done() {
 
 [ "$KSU_SUKISU" = true ] && pure_print '⚠️ WARNING!!! SUKISU DETECTED!'
 
-true # Okay!
+: D # Okay!
