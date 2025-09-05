@@ -592,7 +592,7 @@ func main() {
 			} else {
 				fmt.Printf("[+] Created: \tModule \"%s\" Output Zip \"%s\"\n", mod, zip_name)
 			}
-			_ = zip_writer.SetComment("Built by <https://github.com/OOM-WG/ROOT-Modules-Auto-Builder.git>\nPowered by ShIroRRen <https://shiror.ren>")
+			_ = zip_writer.SetComment("Built by <https://github.com/OOM-WG/ShiroSU-Modules-Builder.git>\nPowered by ShIroRRen <https://shiror.ren>")
 		}()
 		if os.RemoveAll(tmp_dir) != nil {
 			fmt.Printf("[!] Error: \tcannot clean module \"%s\" build cache\n", mod)
