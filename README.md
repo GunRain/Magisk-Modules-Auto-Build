@@ -50,6 +50,8 @@
 │   ├── system.prop         <--- 此文件中指定的属性将会在系统启动时通过 resetprop 更改
 │   ├── sepolicy.rule       <--- 此文件中的 SELinux 策略将会在系统启动时加载
 │   │
+│   ├── system              <--- 此目录用于通过 systemless 挂载替换系统文件
+│   │
 │   ├── cfgui               <--- 模块的 ConfigUI 目录，参见 https://ssu.oom-wg.dev/dev/cfgui
 │   ├── webroot             <--- 模块的 WebUI 目录，参见 https://ssu.oom-wg.dev/dev/webui
 │   │
