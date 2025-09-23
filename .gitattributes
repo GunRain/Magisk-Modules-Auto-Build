@@ -22,6 +22,7 @@ updater-script text eol=lf
 *.txt text eol=lf
 *.md text eol=lf
 *.mkd text eol=lf
+*.mdx text eol=lf
 *.json text eol=lf
 
 *.html text eol=lf
