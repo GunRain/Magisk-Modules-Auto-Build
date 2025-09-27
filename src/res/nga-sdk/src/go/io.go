@@ -143,7 +143,11 @@ func CopyDir(src, dst string) error {
 			return err
 		}
 		if dir.IsDir() {
-			return os.MkdirAll(dstPath, info.Mode())
+			if err := os.MkdirAll(dstPath, info.Mode()); err != nil {
+				return err
+			}
+			atime, mtime := info.ModTime(), info.ModTime()
+			_ = os.Chtimes(dstPath, atime, mtime)
 		}
 		return CopyFile(path, dstPath)
 	})

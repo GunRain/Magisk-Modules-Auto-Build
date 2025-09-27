@@ -37,6 +37,10 @@ until_key() {
 				echo -n power
 				return
 				;;
+			KEY_MUTE)
+				echo -n mute
+				return
+				;;
 			KEY_F[1-9] | KEY_F1[0-9] | KEY_F2[0-4])
 				echo -n "$eventCode" | sed 's/KEY_F/f/g'
 				return
@@ -116,7 +120,13 @@ nga_print() { pure_print "> $1"; }
 # shellcheck disable=SC2120
 newline() { for _ in $(seq 1 "${1:-1}"); do pure_print ''; done; }
 
+print_lines() { for line in "$@"; do echo "$line"; done; }
+
 get_work_dir() { dirname "$(readlink -f "$1")"; }
+
+set_dir_perm() { find "$@" -type d -exec chmod 0755 {} +; }
+
+set_system_file() { chcon -R u:object_r:system_file:s0 "$@"; }
 
 pre_bin() {
 	local bin="$1"
@@ -139,7 +149,44 @@ nohup_bin() {
 	[ -f "$bin" ] || return
 	pre_bin "$bin"
 	shift
-	nohup "$bin" "$@" >/dev/null 2>&1 &
+	run2null nohup "$bin" "$@" &
+}
+
+get_arch() {
+	case "$(getprop ro.product.cpu.abi)" in
+		arm64-v8a) echo -n arm64 ;;
+		armeabi-v7a) echo -n arm ;;
+		armeabi) echo -n arm ;;
+		x86_64) echo -n x86_64 ;;
+		x86) echo -n x86 ;;
+		riscv64) echo -n riscv64 ;;
+		mips64) echo -n mips64 ;;
+		mips) echo -n mips ;;
+		*) return 1 ;;
+	esac
+}
+
+get_app_lib() {
+	local packageName="$1"
+	local libName="$2"
+	local apkDir
+	apkDir="$(run22null pm path "$packageName" | head -n 1 | sed 's/^package://;s/base.apk$//')"
+	[ -n "$apkDir" ] || return
+	local libDir="${apkDir}lib"
+	[ -d "$libDir" ] || return
+	local arch
+	arch="$(get_arch)"
+	{ [ -n "$arch" ] && [ -d "$libDir/$arch" ] && {
+		[ -f "$libDir/$arch/lib$libName.so" ] && echo -n "$libDir/$arch/lib$libName.so"
+		return
+	}; } || {
+		arch="$(basename "$(find "$libDir" -mindepth 1 -maxdepth 1 -type d | head -n 1)")"
+		[ -n "$arch" ] && [ -d "$libDir/$arch" ] && {
+			[ -f "$libDir/$arch/lib$libName.so" ] && echo -n "$libDir/$arch/lib$libName.so"
+			return
+		}
+	}
+	return 1
 }
 
 # shellcheck disable=SC2120
@@ -154,31 +201,47 @@ until_unlock() {
 	[ -z "$1" ] || sleep "$1"
 }
 
+is_ssu() { [ "$SSU" = true ]; }
+is_shirosu() { [ "$SSU" = true ]; }
+
 is_ksu() { [ "$KSU" = true ]; }
+is_kernelsu() { [ "$KSU" = true ]; }
 
 is_ap() { [ "$APATCH" = true ]; }
+is_apatch() { [ "$APATCH" = true ]; }
 
-not_magisk() { is_ksu || is_ap; }
+not_magisk() { is_ssu || is_ksu || is_ap; }
 
 is_magisk() { ! not_magisk; }
 
+nga_install_module() {
+	local zipPath="$1"
+
+	run2null which magisk && {
+		magisk --install-module "$zipPath"
+		return
+	}
+	for us in apd ksud; do
+		{ run2null which $us && {
+			$us module install "$zipPath"
+			return
+		}; } || { [ -f /data/adb/$us ] && {
+			/data/adb/$us module install "$zipPath"
+			return
+		}; }
+	done
+}
+
+nga_install_modules() { for zipPath in "$@"; do nga_install_module "$zipPath"; done; }
+
 magisk_run_completed() {
 	is_magisk && { [ -f "$1/boot-completed.sh" ] && {
+		until_boot
 		# shellcheck disable=SC1091
 		. "$1/boot-completed.sh"
 		exit
 	}; }
 }
-
-set_dir_perm() {
-	find "$@" -type d -exec chmod 0755 {} +
-}
-
-set_system_file() {
-	chcon -R u:object_r:system_file:s0 "$@"
-}
-
-print_lines() { for line in "$@"; do echo "$line"; done; }
 
 get_target_bin() {
 	[ -z "$MODPATH" ] && nga_abort 'Value "MODPATH" does not exist!'
@@ -187,32 +250,10 @@ get_target_bin() {
 	local binName="$1"
 	{ [ -z "$2" ] && local targetArch="$ARCH"; } || local targetArch="$2"
 	mv -f "$MODPATH/bin/$binName/$targetArch.elf" "$MODPATH/$binName" || nga_abort "Arch \"$targetArch\" is not supported!"
-	chmod a+x "$MODPATH/$binName"
+	pre_bin "$MODPATH/$binName"
 }
 
 get_target_bins() { for binName in "$@"; do get_target_bin "$binName"; done; }
-
-get_arch() {
-	case "$(getprop ro.product.cpu.abi)" in
-		arm64-v8a) echo -n arm64 ;;
-		armeabi-v7a) echo -n arm ;;
-		armeabi) echo -n arm ;;
-		x86_64) echo -n x86_64 ;;
-		x86) echo -n x86 ;;
-		riscv64) echo -n riscv64 ;;
-		mips64) echo -n mips64 ;;
-		mips) echo -n mips ;;
-	esac
-}
-
-get_app_lib() {
-	local packageName="$1"
-	local libName="$2"
-	local apkDir
-	apkDir="$(run22null pm path "$packageName" | head -n 1 | sed 's/^package://;s/base.apk$//')"
-	[ -z "$apkDir" ] && return
-	echo -n "${apkDir}lib/$(get_arch)/lib$libName.so"
-}
 
 # 此函数较为特殊，用于批量安装模块功能，请完整阅读并理解此函数的代码后再使用此函数
 # shellcheck disable=SC2154
@@ -221,7 +262,7 @@ run_install_list() {
 	local func_num="$2"
 
 	newline
-	nga_print '通过按压音量上键切换安装内容，通过按压音量下键确定安装内容'
+	nga_print '通过按压音量加键切换安装内容，通过按压音量减键确定安装内容'
 	newline
 
 	for num in $(seq 1 "$func_num"); do
@@ -282,26 +323,6 @@ run_install_list() {
 	done
 }
 
-nga_install_module() {
-	local zipPath="$1"
-
-	run2null which magisk && {
-		magisk --install-module "$zipPath"
-		return $?
-	}
-	for us in apd ksud; do
-		{ run2null which $us && {
-			$us module install "$zipPath"
-			return $?
-		}; } || { [ -f /data/adb/$us ] && {
-			/data/adb/$us module install "$zipPath"
-			return $?
-		}; }
-	done
-}
-
-nga_install_modules() { for zipPath in "$@"; do nga_install_module "$zipPath"; done; }
-
 nga_install_init() {
 	[ -z "$MODPATH" ] && nga_abort 'Value "MODPATH" does not exist!'
 
@@ -318,7 +339,7 @@ nga_install_init() {
 	hashList="$(zcat "$hashListFile" | tr a-zA-Z A-Za-z | base64 -d)"
 	find "$MODPATH/" -type f -not -path '*META-INF*' -not -name hashList.dat | while IFS= read -r file; do
 		str_eq "${file#"$MODPATH/"}" "$@" && continue
-		[ "$(echo -n "$hashList" | grep -E " ${file#"$MODPATH/"}$" | awk '{print $1}')" = "$(echo -n "$(sha384sum "$file" | awk '{print $1}')" | sha1sum | awk '{print $1}')" ] || nga_abort "Failed to verify file \"${file#"$MODPATH/"}\"!"
+		[ "$(echo -n "$hashList" | grep -E " ${file#"$MODPATH/"}$" | cut -d\  -f1)" = "$(echo -n "$(sha384sum "$file" | cut -d\  -f1)" | sha1sum | cut -d\  -f1)" ] || nga_abort "Failed to verify file \"${file#"$MODPATH/"}\"!"
 	done
 	del -f "$hashListFile"
 }
@@ -406,6 +427,7 @@ nga_install_done() {
 			export IS64BIT=false
 			;;
 	esac
+	export ABI
 }
 
 [ -n "$MAGISK_VER_CODE" ] \
@@ -414,4 +436,4 @@ nga_install_done() {
 
 [ "$KSU_SUKISU" = true ] && pure_print '⚠️ WARNING!!! SUKISU DETECTED!'
 
-: D # Okay!
+: Okay!
