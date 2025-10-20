@@ -18,8 +18,8 @@ import (
 	"bytes"
 	"compress/flate"
 	"compress/gzip"
+	"crypto/md5"
 	"crypto/sha1"
-	"crypto/sha512"
 	"encoding/base64"
 	"encoding/hex"
 	"flag"
@@ -34,6 +34,7 @@ import (
 	"time"
 
 	"app.niggergo.work/sdk/nga"
+	script "app.niggergo.work/sdk/shell"
 )
 
 var (
@@ -49,7 +50,7 @@ func ndk_build(cmds ...string) bool {
 
 func go_env(envs map[string]string) bool {
 	for key, val := range envs {
-		if _, err = exec.Command("go", "env", "-w", key+"="+val).CombinedOutput(); err != nil {
+		if err = os.Setenv(key, val); err != nil {
 			return false
 		}
 	}
@@ -370,13 +371,6 @@ func main() {
 					fmt.Println("[!] Error: \tcannot scan archs")
 					os.Exit(-1)
 				}
-				if !go_env(map[string]string{
-					"GOOS":   runtime.GOOS,
-					"GOARCH": runtime.GOARCH,
-				}) {
-					fmt.Println("[!] Error: \tcannot set go env")
-					os.Exit(-1)
-				}
 			}
 		}
 		if os.Chdir(wd) != nil {
@@ -396,11 +390,8 @@ func main() {
 			}
 		}
 
-		nga_dir := filepath.Join(wd, "res", "nga-sdk", "src", "shell")
-		if nga.CopyFile(
-			filepath.Join(nga_dir, "nga-utils.sh"),
-			filepath.Join(tmp_dir, "nga-utils.sh"),
-		) != nil {
+		err := os.WriteFile(filepath.Join(tmp_dir, "nga-utils.sh"), []byte(script.UtilsScript), 0666)
+		if err != nil {
 			fmt.Println("[!] Error: \tcannot copy nga shell utils")
 			os.Exit(-1)
 		} else {
@@ -436,22 +427,23 @@ func main() {
 			}
 		}
 
-		enc_path, err := filepath.Rel(wd, filepath.Join(nga_dir, "nga-enc.sh"))
-		enc_path = filepath.ToSlash(enc_path)
-		if err != nil {
-			fmt.Printf("[!] Error: \tcannot get relative path for \"%s\"\n", filepath.Join(nga_dir, "nga-enc.sh"))
-			os.Exit(-1)
+		var cmdStr string
+		if runtime.GOOS == "windows" {
+			cmdStr = `eval \"$(echo '%s' | base64 -d)\"`
+		} else {
+			cmdStr = `eval "$(echo '%s' | base64 -d)"`
 		}
+		cmdStr = fmt.Sprintf(cmdStr, base64.StdEncoding.EncodeToString([]byte(script.EncScript)))
 		for _, sh := range []string{"nga-utils.sh", "customize.sh", "install.sh", "config.sh", "action.sh"} {
 			sh_path, err := filepath.Rel(wd, filepath.Join(tmp_dir, sh))
-			sh_path = filepath.ToSlash(sh_path)
 			if err != nil {
-				fmt.Printf("[!] Error: \tcannot get relative path for \"%s\"\n", filepath.Join(nga_dir, sh))
+				fmt.Printf("[!] Error: \tcannot get relative path for \"%s\"\n", filepath.Join(tmp_dir, sh))
 				os.Exit(-1)
 			}
+			sh_path = filepath.ToSlash(sh_path)
 			if nga.PathExist(sh_path) {
-				if _, err = exec.Command(shell,
-					enc_path,
+				if _, err = exec.Command(shell, "-c",
+					cmdStr, "AW-Enc",
 					sh_path,
 				).CombinedOutput(); err != nil {
 					fmt.Printf("[!] Error: \tcannot encrypt script \"%s\"\n", sh)
@@ -479,13 +471,14 @@ func main() {
 				return err
 			}
 			defer file.Close()
-			hash1 := sha512.New384()
-			if _, err := io.Copy(hash1, file); err != nil {
+			md5Hash := md5.New()
+			sha1Hash := sha1.New()
+			if _, err := io.Copy(io.MultiWriter(md5Hash, sha1Hash), file); err != nil {
 				return err
 			}
-			hash2 := sha1.New()
-			hash2.Write([]byte(hex.EncodeToString(hash1.Sum(nil))))
-			buffer.WriteString(hex.EncodeToString(hash2.Sum(nil)) + " " + filepath.ToSlash(rel) + "\n")
+			md5Str := hex.EncodeToString(md5Hash.Sum(nil))
+			sha1Str := hex.EncodeToString(sha1Hash.Sum(nil))
+			buffer.WriteString(md5Str + sha1Str + " " + filepath.ToSlash(rel) + "\n")
 			return nil
 		}) != nil {
 			fmt.Println("[!] Error: \tcannot get hashes")

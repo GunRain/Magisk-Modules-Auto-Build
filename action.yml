@@ -18,7 +18,7 @@ inputs:
     default: 'r28'
   go-version:
     description: 'Go Version'
-    default: '1.24'
+    default: '1.25'
 outputs:
   zips:
     description: 'zips dir path'
@@ -40,6 +40,7 @@ runs:
       shell: bash
       run: |
         cd "${{ github.action_path }}/src"
+        go mod tidy
         go run . -in "${{ inputs.input-dir }}" -id "${{ inputs.input-id }}" -out "${{ inputs.output-dir }}" -outname "${{ inputs.zip-name }}" && {
           echo "zips=${{ inputs.output-dir }}" >> "$GITHUB_OUTPUT"
         }

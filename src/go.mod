@@ -1,7 +1,8 @@
-module sakit.in/mod-bld
+module oom-wg.dev/ssu/modules-builder
 
-go 1.24
+go 1.25
 
-replace app.niggergo.work/sdk/nga => ./res/nga-sdk/src/go
-
-require app.niggergo.work/sdk/nga v0.0.0
+require (
+	app.niggergo.work/sdk/nga v0.0.0-20251020105601-5bbaaee2ecef
+	app.niggergo.work/sdk/shell v0.0.0-20251020105601-5bbaaee2ecef
+)
