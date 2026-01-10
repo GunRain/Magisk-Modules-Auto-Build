@@ -415,7 +415,7 @@ func main() {
 		if strings.Contains(string(prop_dat), "白彩恋") ||
 			strings.Contains(string(prop_dat), "ShIroRRen") ||
 			strings.Contains(string(prop_dat), "ShIroR.Ren") ||
-			strings.Contains(string(prop_dat), "O.O.M. W.G.") {
+			strings.Contains(string(prop_dat), "OOM WG") {
 			if nga.CopyFile(
 				filepath.Join(filepath.Dir(wd), "LICENSE.txt"),
 				filepath.Join(tmp_dir, "LICENSE.txt"),
