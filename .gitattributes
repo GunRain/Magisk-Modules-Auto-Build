@@ -20,9 +20,9 @@ updater-script text eol=lf
 *.vbs text eol=crlf
 
 *.txt text eol=lf
-*.md text eol=lf
-*.mkd text eol=lf
-*.mdx text eol=lf
+*.md text eol=lf linguist-documentation
+*.mkd text eol=lf linguist-documentation
+*.mdx text eol=lf linguist-documentation
 *.json text eol=lf
 
 *.html text eol=lf
@@ -42,10 +42,10 @@ updater-script text eol=lf
 *.yml text eol=lf
 *.yaml text eol=lf
 *.toml text eol=lf
-*.fvv text eol=lf
-*.fw text eol=lf
-*.fww text eol=lf
-*.rpp text eol=lf
-*.rxx text eol=lf
-*.r++ text eol=lf
-*.rr text eol=lf
+*.fvv text eol=lf linguist-language=FVV linguist-detectable
+*.fw text eol=lf linguist-language=FVV linguist-detectable
+*.fww text eol=lf linguist-language=FWW linguist-detectable
+*.rpp text eol=lf linguist-language=FVV linguist-detectable
+*.rxx text eol=lf linguist-language=FVV linguist-detectable
+*.r++ text eol=lf linguist-language=FVV linguist-detectable
+*.rr text eol=lf linguist-language=FVV linguist-detectable
