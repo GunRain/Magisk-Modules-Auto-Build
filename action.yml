@@ -15,10 +15,10 @@ inputs:
     default: ''
   ndk-version:
     description: 'Android NDK Version'
-    default: 'r28'
+    default: 'r29'
   go-version:
     description: 'Go Version'
-    default: '1.25'
+    default: '1.26'
 outputs:
   zips:
     description: 'zips dir path'
