@@ -1,13 +1,13 @@
 //====================================================================================================
 // Copyright (C) 2016-present ShIroRRen <http://shiror.ren>.                                         =
 //                                                                                                   =
-// Licensed under the F2DLPR License.                                                                =
+// Licensed under the File to Downloader License.                                                    =
 //                                                                                                   =
 // YOU MAY NOT USE THIS FILE EXCEPT IN COMPLIANCE WITH THE LICENSE.                                  =
 // Provided "AS IS", WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,                                   =
 // unless required by applicable law or agreed to in writing.                                        =
 //                                                                                                   =
-// For the F2DLPR License terms and conditions, visit: <http://license.fileto.download>.             =
+// For the File to Downloader License terms and conditions, visit: <http://license.fileto.download>. =
 //====================================================================================================
 
 package main
@@ -420,10 +420,10 @@ func main() {
 				filepath.Join(filepath.Dir(wd), "LICENSE.txt"),
 				filepath.Join(tmp_dir, "LICENSE.txt"),
 			) != nil {
-				fmt.Println("[!] Error: \tcannot copy F2DLPR License")
+				fmt.Println("[!] Error: \tcannot copy License")
 				os.Exit(-1)
 			} else {
-				fmt.Printf("[=] Copied: \tF2DLPR License for Module \"%s\"\n", mod)
+				fmt.Printf("[=] Copied: \tLicense for Module \"%s\"\n", mod)
 			}
 		}
 
